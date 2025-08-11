@@ -1,0 +1,33 @@
+module.exports = {
+  darkMode: 'class',
+  content: ['./index.html', './src/**/*.{js,jsx}'],
+  theme: {
+    extend: {
+      colors: {
+        primary: '#15100e',
+        accent: '#d4a574',
+        'dark-bg': '#15100e',
+        'darker-bg': '#000000',
+        'text-gray': '#474747',
+        'text-brown': '#342824',
+        'text-cream': '#ebdcc4',
+        'brown-50': '#fdf8f3',
+        'brown-100': '#f7ede0',
+        'brown-200': '#ebd5b7',
+        'brown-300': '#dbb986',
+        'brown-400': '#c89854',
+        'brown-500': '#b87d34',
+        'brown-600': '#a66926',
+        'brown-700': '#8a5522',
+        'brown-800': '#704621',
+        'brown-900': '#5d3a1e',
+        'brown-950': '#321e0f',
+      },
+      fontFamily: {
+        heading: ['Inter', 'ui-sans-serif', 'system-ui'],
+        body: ['Inter', 'ui-sans-serif', 'system-ui'],
+      },
+    },
+  },
+  plugins: [],
+}

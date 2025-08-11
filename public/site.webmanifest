@@ -1,0 +1,9 @@
+{
+  "name": "Hajime Portfolio",
+  "short_name": "Hajime",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1611",
+  "theme_color": "#1a1611",
+  "icons": []
+}
