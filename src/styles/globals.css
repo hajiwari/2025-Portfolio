@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=League+Gothic:wght@400;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -15,8 +16,42 @@ html {
   backdrop-filter: blur(6px);
 }
 
+/* SUPER THIN outline using text-shadow - NO FILL */
+.text-outline-only {
+  color: transparent !important;
+  text-shadow: 
+    -0.25px -0.25px 0 #d4a574,
+     0     -0.25px 0 #d4a574,
+     0.25px -0.25px 0 #d4a574,
+     0.25px  0     0 #d4a574,
+     0.25px  0.25px 0 #d4a574,
+     0      0.25px 0 #d4a574,
+    -0.25px  0.25px 0 #d4a574,
+    -0.25px  0     0 #d4a574;
+}
+
+/* Outlined text utilities for consistent rendering */
+.outlined-text {
+  -webkit-text-stroke-width: 0.5px;
+  -webkit-text-fill-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: geometricPrecision;
+  shape-rendering: geometricPrecision;
+  paint-order: stroke fill;
+}
+
 /* Dark mode base colors */
 .dark body {
   background-color: #000000;
   color: #ebdcc4;
+}
+
+/* Remove underlines from navigation links */
+.no-underline {
+  text-decoration: none !important;
+}
+
+nav a {
+  text-decoration: none !important;
 }

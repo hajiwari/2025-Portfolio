@@ -26,6 +26,9 @@ module.exports = {
       fontFamily: {
         heading: ['Inter', 'ui-sans-serif', 'system-ui'],
         body: ['Inter', 'ui-sans-serif', 'system-ui'],
+        anton: ['Anton', 'Impact', 'Arial Black', 'sans-serif'],
+        league: ['League Gothic', 'Impact', 'Arial Black', 'sans-serif'],
+        game: ['Orbitron', 'monospace'],
       },
     },
   },
