@@ -1,7 +1,45 @@
 @import url('https://fonts.googleapis.com/css2?family=League+Gothic:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+
+/* Brick Sans local font. Files are in /public/fonts/NTBrickSans */
+@font-face {
+  font-family: 'Brick Sans';
+  src:
+    url('/fonts/NTBrickSans/NTBrickSans.otf') format('opentype'),
+    url('/fonts/NTBrickSans/NTBrickSans.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Outline text utility: true outline (no fill), crisp stroke */
+.outline-text {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1px #ffffff; /* thin, crisp outline */
+  paint-order: stroke fill;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: geometricPrecision;
+}
+
+/* Outside-only outline (no inner counters), using 8-direction text-shadow */
+.outline-outside {
+  color: transparent !important;
+  text-shadow:
+    -1px -1px 0 #ffffff,
+     0   -1px 0 #ffffff,
+     1px -1px 0 #ffffff,
+     1px  0   0 #ffffff,
+     1px  1px 0 #ffffff,
+     0    1px 0 #ffffff,
+    -1px  1px 0 #ffffff,
+    -1px  0   0 #ffffff;
+}
 
 html, body, #root {
   height: 100%;

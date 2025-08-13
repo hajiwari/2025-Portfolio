@@ -6,7 +6,7 @@ import { HiSun, HiMoon } from 'react-icons/hi'
 export default function Header(){
   const [dark, setDark] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [ready, setReady] = useState(false) // delay header reveal slightly to sync with intro
+  const [ready, setReady] = useState(false) // delay header reveal to after intro (~7s)
 
   useEffect(() => {
     const saved = localStorage.getItem('theme')
@@ -27,8 +27,17 @@ export default function Header(){
   }, [])
 
   useEffect(() => {
-    const t = setTimeout(() => setReady(true), 700)
-    return () => clearTimeout(t)
+    let timeout = setTimeout(() => setReady(true), 10000) // safety fallback (hero + extra 2s)
+    const onReady = () => {
+      clearTimeout(timeout)
+  // Add extra 0.1s delay before revealing header
+  timeout = setTimeout(() => setReady(true), 100)
+    }
+    window.addEventListener('hero:ready', onReady)
+    return () => {
+      window.removeEventListener('hero:ready', onReady)
+      clearTimeout(timeout)
+    }
   }, [])
 
   const toggle = () => {
@@ -41,15 +50,15 @@ export default function Header(){
   return (
     <>
       <motion.header 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: ready ? 1 : 0, y: ready ? 0 : -10 }}
-        transition={{ duration: 0.3, delay: 0.05 }}
+        initial={{ y: -120 }}
+        animate={{ y: ready ? 0 : -120 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
         className={`fixed w-full z-40 backdrop-blur-md transition-all duration-300 ${
           scrolled ? 'bg-black/60' : 'bg-black'
         }`}
       > 
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-8">
-          <motion.a href="#page-0" initial={{ y: -10, opacity:0 }} animate={{ y:0, opacity:1 }} transition={{duration:0.4}} className="text-lg tracking-[0.5em] font-heading font-extrabold text-white no-underline">H A J I M E</motion.a>
+          <motion.a href="#page-0" initial={{ y: -10, opacity:0 }} animate={{ y:0, opacity:1 }} transition={{duration:0.4}} className="text-lg tracking-[0.5em] font-heading font-extrabold text-white no-underline">H A J I</motion.a>
           <nav className="hidden sm:flex items-center gap-8 text-base">
             <a href="#page-0" className="hover:text-accent text-white transition-colors no-underline">HOME</a>
             <a href="#page-1" className="hover:text-accent text-white transition-colors no-underline">ABOUT</a>
@@ -65,8 +74,8 @@ export default function Header(){
         aria-label="Toggle dark mode" 
         className="fixed bottom-6 right-6 z-40 p-4 bg-black text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
         initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.5, duration: 0.3 }}
+        animate={{ scale: ready ? 1 : 0, opacity: ready ? 1 : 0 }}
+        transition={{ delay: 0.05, duration: 0.3 }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
       >

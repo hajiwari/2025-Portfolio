@@ -29,6 +29,7 @@ module.exports = {
         anton: ['Anton', 'Impact', 'Arial Black', 'sans-serif'],
         league: ['League Gothic', 'Impact', 'Arial Black', 'sans-serif'],
         game: ['Orbitron', 'monospace'],
+            brick: ['"Brick Sans"', 'Anton', 'Inter', 'ui-sans-serif', 'system-ui'],
       },
     },
   },

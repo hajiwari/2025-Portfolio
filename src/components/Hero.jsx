@@ -1,12 +1,20 @@
 import React from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
 import { useEffect, useState } from 'react'
 
 export default function Hero(){
   const [scrolled, setScrolled] = useState(false)
   const [typedText, setTypedText] = useState('')
-  const [intro, setIntro] = useState(true) // Show only "Hi I'm" for 0.7s
+  const [intro, setIntro] = useState(false) // No overlay; sequence runs inline
+  const [hiNearFinal, setHiNearFinal] = useState(false) // deprecated, kept for layout stability (no-op)
+  const [hiBrick, setHiBrick] = useState(false) // toggle Brick Sans after 0.5s
+  const [hiText, setHiText] = useState("Hey!") // standalone then "Hey! I'm"
+  const [showHi, setShowHi] = useState(true)
+  const [showFullName, setShowFullName] = useState(false) // "Jaime Dela Cruz III"
+  const [showCallMe, setShowCallMe] = useState(false) // pill: "but you can call me"
+  const [revealHajime, setRevealHajime] = useState(false) // finally reveal HAJIME
   const fullText = 'HAJIME'
+  const [nameShrink, setNameShrink] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,90 +26,256 @@ export default function Hero(){
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Stage the sequence inline on mount
   useEffect(() => {
-    // Initial intro: show only "Hi I'm" for 0.7s
-    const t = setTimeout(() => setIntro(false), 700)
-    return () => clearTimeout(t)
+    const timers = []
+    // 2.0s: change text to "I'm" (keep heading font), show full name
+    timers.push(setTimeout(() => {
+      setHiText("I'm")
+      setShowFullName(true)
+    }, 2000))
+    // 4.5s: show the pill before HAJIME
+    timers.push(setTimeout(() => {
+      setShowCallMe(true)
+    }, 4500))
+    // 7.0s: switch back to "Hey! I'm" and to Brick Sans, hide pill and reveal HAJIME + others
+    timers.push(setTimeout(() => {
+      setHiText("Hey! I'm")
+      setHiBrick(true)
+      setShowCallMe(false)
+      setRevealHajime(true)
+    }, 7000))
+    return () => timers.forEach(clearTimeout)
   }, [])
 
+  // Remove typing animation: set full name once
   useEffect(() => {
-    let currentIndex = 0
-    const typingInterval = setInterval(() => {
-      if (currentIndex <= fullText.length) {
-        setTypedText(fullText.substring(0, currentIndex))
-        currentIndex++
-      } else {
-        clearInterval(typingInterval)
-      }
-    }, 200) // 200ms delay between each letter
-
-    return () => clearInterval(typingInterval)
+    setTypedText(fullText)
   }, [])
+
+  // When HAJIME reveals, keep name large during move, then shrink after
+  useEffect(() => {
+    if (revealHajime) {
+      setNameShrink(false)
+      const t = setTimeout(() => setNameShrink(true), 450)
+      return () => clearTimeout(t)
+    } else {
+      setNameShrink(false)
+    }
+  }, [revealHajime])
   return (
     <section id="page-0" className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: 'radial-gradient(circle at bottom left, #0a0907 0%, #000000 40%)' }}>
-      {/* Intro overlay: only "Hi I'm" centered for 0.7s, then fades out */}
-      <AnimatePresence>
-        {intro && (
-          <motion.div
-            key="intro-overlay"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <motion.div layoutId="hi-text" className="mb-0">
-              <span className="text-3xl md:text-4xl font-heading font-light text-text-brown dark:text-text-cream">
-                Hi I'm
-              </span>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+  {/* No overlay; inline sequence */}
       {/* Background decorative elements */}
       <div className="absolute inset-0 opacity-10 dark:opacity-5">
         <div className="absolute top-20 right-20 w-32 h-32 bg-accent rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 left-20 w-24 h-24 bg-brown-300 rounded-full blur-2xl"></div>
       </div>
 
+  <LayoutGroup>
   <div className="max-w-7xl mx-auto px-6 lg:px-8 relative w-full min-h-screen flex flex-col items-center justify-center">
-        {/* Hi I'm */}
-        {!intro && (
-          <motion.div 
-            layoutId="hi-text"
-            initial={{ y: 20, opacity: 0 }} 
-            animate={{ y: 0, opacity: 1 }} 
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="mb-4 relative z-10"
-          >
-            <span className="text-2xl md:text-3xl font-heading font-light text-text-brown dark:text-text-cream">
-              Hi I'm
-            </span>
-          </motion.div>
-        )}
+        {/* Hi! I'm - smooth font crossfade near final position (centered), hidden when HAJIME reveals */}
+            <motion.div layout="position" className="w-full flex flex-col items-center">
+              <motion.div 
+                key="hi-line"
+                layout="position"
+                initial={{ y: 20, opacity: 0 }} 
+                animate={{ y: 0, opacity: 1 }} 
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className={`relative z-10 w-full flex justify-center ${revealHajime ? 'mb-4' : 'mb-1'}`}
+              >
+                <span className="relative inline-block leading-none text-2xl md:text-3xl font-light text-text-brown dark:text-text-cream text-center">
+                  {/* Overlay two fonts and crossfade to avoid layout jump */}
+                  <motion.span
+                    className="font-heading block absolute inset-0 whitespace-nowrap"
+                    initial={{ opacity: 1 }}
+                    animate={{ opacity: hiBrick ? 0 : 1 }}
+                    transition={{ duration: 0.25 }}
+                    aria-hidden={hiBrick}
+                  >
+                    {hiText}
+                  </motion.span>
+                  <motion.span
+                    className="font-brick block absolute inset-0 whitespace-nowrap"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: hiBrick ? 1 : 0 }}
+                    transition={{ duration: 0.25 }}
+                    aria-hidden={!hiBrick}
+                  >
+                    {hiText}
+                  </motion.span>
+                  {/* Placeholder locks the width to prevent stretch */}
+                  <span className="invisible block whitespace-nowrap">{hiText}</span>
+                </span>
+              </motion.div>
 
-        {/* HAJIME - SMOOTH TYPING ANIMATION */}
-        {!intro && (
-          <div className="relative mb-8">
+        {/* Initial full name: appears after "I'm" and hides before the pill */}
+          {showFullName && !revealHajime && (
+            <motion.div
+              key="full-name-initial"
+              layoutId="full-name"
+              layout
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+              className="relative z-20 w-full flex justify-center mb-[2px]"
+            >
+              <h2 className="font-game font-bold leading-none whitespace-nowrap tracking-wide text-text-brown dark:text-text-cream text-center text-2xl md:text-3xl lg:text-4xl">
+                Jaime Dela Cruz III
+              </h2>
+            </motion.div>
+          )}
+            </motion.div>
+        
+
+        {/* Temporary pill: "but you can call me" */}
+  {(
+          <AnimatePresence>
+            {showCallMe && (
+              <motion.div
+                key="call-me-pill"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ duration: 0.3 }}
+                className="mb-6 relative z-10"
+              >
+                <div className="inline-block px-4 py-1.5 rounded-full bg-transparent text-text-brown dark:text-text-cream font-sans text-xs md:text-sm">
+                  but you can call me
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+  )}
+
+  {/* HAJIME - reveal only after pill hides */}
+        {revealHajime && (
+          <div className="relative -mt-1 mb-0 flex justify-center">
+            {/* Base filled title (under hero image by DOM order and z-0) */}
             <motion.h1
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3, delay: 0.5 }}
-              className="text-[10rem] md:text-[16rem] lg:text-[20rem] xl:text-[24rem] font-league font-bold leading-none relative z-0 text-accent"
+              transition={{ duration: 0.6 }}
+              className="text-[10rem] md:text-[16rem] lg:text-[20rem] xl:text-[24rem] font-bold leading-none relative z-0 text-accent invisible"
               style={{ 
-                letterSpacing: '0.08em'
+                letterSpacing: '0.08em',
+                fontFamily: 'Bebas Neue, Anton, Impact, "Arial Black", sans-serif',
+                fontWeight: 700,
+                color: '#dac8ab'
               }}
             >
               {typedText}
             </motion.h1>
+
+            {/* Filled SVG duplicate (beneath hero image) for perfect alignment with outline */}
+            <motion.div
+              aria-hidden
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6 }}
+              className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center"
+            >
+              <div
+                className="font-bold leading-none text-center text-[10rem] md:text-[16rem] lg:text-[20rem] xl:text-[24rem]"
+                style={{ letterSpacing: '0.08em' }}
+              >
+                <svg
+                  width="100%"
+                  height="1em"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{ overflow: 'visible', display: 'block' }}
+                >
+                  <text
+                    x="50%"
+                    y="0.8em"
+                    textAnchor="middle"
+                    fill="#dac8ab"
+                    style={{
+                      fontFamily: 'Bebas Neue, Anton, Impact, "Arial Black", sans-serif',
+                      fontWeight: 700,
+                      letterSpacing: '0.08em'
+                    }}
+                  >
+                    {typedText}
+                  </text>
+                </svg>
+              </div>
+            </motion.div>
+
+            {/* Outline-only duplicate positioned exactly on top (SVG, true outline) */}
+            <motion.div
+              aria-hidden
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.05 }}
+              className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center"
+            >
+              <div
+                className="font-bold leading-none text-center text-[10rem] md:text-[16rem] lg:text-[20rem] xl:text-[24rem]"
+                style={{ letterSpacing: '0.08em' }}
+              >
+                <svg
+                  width="100%"
+                  height="1em"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{ overflow: 'visible', display: 'block' }}
+                >
+                  <defs>
+                    <filter id="hajime-outline" filterUnits="userSpaceOnUse" x="-150%" y="-150%" width="400%" height="400%" colorInterpolationFilters="sRGB">
+                      <feMorphology in="SourceAlpha" operator="dilate" radius="2" result="dilated" />
+                      <feComposite in="dilated" in2="SourceAlpha" operator="out" result="outerOutline" />
+                      <feFlood floodColor="#dac8ab" result="outlineColor" />
+                      <feComposite in="outlineColor" in2="outerOutline" operator="in" result="coloredOutline" />
+                      <feMerge>
+                        <feMergeNode in="coloredOutline" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  <text
+                    x="50%"
+                    y="0.8em"
+                    textAnchor="middle"
+                    fill="#000"
+                    filter="url(#hajime-outline)"
+                    style={{
+                      fontFamily: 'Bebas Neue, Anton, Impact, "Arial Black", sans-serif',
+                      fontWeight: 700,
+                      letterSpacing: '0.08em'
+                    }}
+                  >
+                    {typedText}
+                  </text>
+                </svg>
+              </div>
+            </motion.div>
           </div>
         )}
 
+        {/* Full name below HAJIME (simple slide into final position on reveal) */}
+        {revealHajime && (
+          <motion.div
+            layoutId="full-name"
+            layout
+            transition={{ type: 'spring', stiffness: 240, damping: 32 }}
+            className="-mt-6 md:-mt-8 lg:-mt-10 mb-7 md:mb-10 text-center relative z-20 w-full flex justify-center"
+          >
+            <motion.div
+              initial={{ scale: 1 }}
+              animate={{ scale: nameShrink ? 0.62 : 1 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+              style={{ transformOrigin: 'top center', willChange: 'transform' }}
+            >
+              <h2 className="font-game font-bold leading-none whitespace-nowrap tracking-wide text-text-brown dark:text-text-cream text-center text-2xl md:text-3xl lg:text-4xl">
+                Jaime Dela Cruz III
+              </h2>
+            </motion.div>
+          </motion.div>
+        )}
+
         {/* Game-style subtitle - EXTRA TIGHT tracking */}
-        {!intro && (
+        {revealHajime && (
           <motion.div
             initial={{ y: 20, opacity: 0 }} 
             animate={{ y: 0, opacity: 1 }} 
-            transition={{ duration: 0.6, delay: 0.8 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
             className="mb-12 text-center relative z-10"
           >
             <p className="text-sm md:text-base lg:text-lg font-game font-black tracking-[0.15em] text-text-brown dark:text-text-cream uppercase transform scale-y-110">
@@ -111,11 +285,11 @@ export default function Hero(){
         )}
 
         {/* CTA Buttons */}
-        {!intro && (
+        {revealHajime && (
           <motion.div 
             initial={{ y: 20, opacity: 0 }} 
             animate={{ y: 0, opacity: 1 }} 
-            transition={{ duration: 0.6, delay: 1 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-col sm:flex-row gap-4 justify-center relative z-10"
           >
             <motion.a 
@@ -173,8 +347,8 @@ export default function Hero(){
         className="absolute bottom-20 right-10 w-4 h-4 bg-brown-300/40 rounded-full blur-sm"
       ></motion.div>
 
-      {/* Scroll indicator - Hide when scrolled */}
-      {!intro && (
+  {/* Scroll indicator - Hide when scrolled */}
+  {revealHajime && (
         <motion.div
           initial={{ opacity: 0, y: 20 }} 
           animate={{ 
@@ -204,7 +378,7 @@ export default function Hero(){
       )}
 
       {/* Social Icons - Bottom Left */}
-      {!intro && (
+  {revealHajime && (
         <motion.div 
           initial={{ opacity: 0, y: 20 }} 
           animate={{ opacity: 1, y: 0 }} 
@@ -237,7 +411,7 @@ export default function Hero(){
       )}
 
       {/* Hero image - BRUSH STROKE PAINT REVEAL EFFECT */}
-      {!intro && (
+    {revealHajime && (
   <div className="absolute bottom-0 right-0 z-0 overflow-hidden">
           <motion.div
             className="relative w-96 h-[30rem] md:w-[32rem] md:h-[38rem] lg:w-[40rem] lg:h-[48rem] xl:w-[48rem] xl:h-[56rem]"
@@ -245,7 +419,7 @@ export default function Hero(){
           {/* Base image - COMPLETELY HIDDEN - no image visible initially */}
           
           {/* Big Brush Strokes Coming from Bottom - Alternating Left/Right */}
-          {[...Array(8)].map((_, i) => (
+      {[...Array(8)].map((_, i) => (
             <motion.div
               key={i}
               className="absolute inset-0 overflow-hidden"
@@ -260,9 +434,17 @@ export default function Hero(){
                   : `polygon(125% ${100 - i * 12.5 + Math.sin(i) * 3}%, -25% ${100 - i * 12.5 + Math.cos(i) * 4}%, -25% ${100 - i * 12.5 - 15 + Math.sin(i + 1) * 3}%, 125% ${100 - i * 12.5 - 15 + Math.cos(i + 2) * 4}%)` // Sweep Right to Left
               }}
               transition={{
-                duration: 0.167,
-                delay: 1.2 + i * 0.167,
+        duration: 0.167,
+        // Delay hero image ~1s after other elements load (last element delay ~1.2s)
+        delay: 0.8 + i * 0.167,
                 ease: "linear",
+              }}
+              onAnimationComplete={() => {
+                if (i === 7) {
+                  try {
+                    window.dispatchEvent(new CustomEvent('hero:ready'))
+                  } catch (e) {}
+                }
               }}
             >
               <img 
@@ -278,6 +460,7 @@ export default function Hero(){
           </motion.div>
         </div>
       )}
-    </section>
+  </LayoutGroup>
+  </section>
   )
 }

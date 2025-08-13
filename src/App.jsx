@@ -6,10 +6,13 @@ import About from './components/About'
 import Skills from './components/Skills'
 import Projects from './components/Projects'
 import Contact from './components/Contact'
+import ScrollingPath from './components/ScrollingPath'
 
 export default function App(){
   return (
-    <div className="min-h-screen bg-text-cream text-text-brown dark:bg-darker-bg dark:text-text-cream font-body">
+    <div className="relative min-h-screen bg-text-cream text-text-brown dark:bg-darker-bg dark:text-text-cream font-body">
+  {/* Global scrolling path overlay */}
+  <ScrollingPath />
       <Header />
       <main>
   <Hero />
