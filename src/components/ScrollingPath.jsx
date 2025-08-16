@@ -1,14 +1,14 @@
 import React from 'react'
 
 // A single page-wide SVG path with a glowing orb that advances with scroll.
-// Path starts at About (center), continues to Skills (center), then Projects
+// Path starts at About (center), continues to Experience (center), then Projects
 // (between caption and cards), and ends at Contact (left side). Direction
 // changes are horizontal (orthogonal path using vertical then horizontal legs).
 export default function ScrollingPath(){
   const svgRef = React.useRef(null)
   const pathRef = React.useRef(null)
   const [dims, setDims] = React.useState({ width: 0, height: 0 })
-  const [points, setPoints] = React.useState(null) // {about, skills, projects, contact}
+  const [points, setPoints] = React.useState(null) // {about, experience, projects, contact}
   const [len, setLen] = React.useState(0)
   const [progress, setProgress] = React.useState(0)
   const [visible, setVisible] = React.useState(false)
@@ -22,7 +22,7 @@ export default function ScrollingPath(){
       document.documentElement.offsetHeight,
       document.documentElement.clientHeight
     )
-    const width = document.documentElement.clientWidth
+  const width = document.documentElement.clientWidth
 
     // Helpers
     const absRect = (el) => {
@@ -35,15 +35,15 @@ export default function ScrollingPath(){
 
   const aboutSection = document.querySelector('#page-1')
   const aboutBox = absRect(aboutSection)
-    const skillsBox = absRect(document.querySelector('#skills .max-w-5xl'))
+  const expBox = absRect(document.querySelector('#experience'))
   // Top of projects section for the vertical turn, and divider for horizontal X
   const projSection = document.querySelector('#page-2')
   const projBox = absRect(projSection)
   const projDivider = document.querySelector('.projects-divider')
   const projDivBox = absRect(projDivider)
-    const contactBox = absRect(document.querySelector('#page-3 .max-w-4xl'))
+  const contactBox = absRect(document.querySelector('#page-3'))
 
-  if (!aboutBox || !skillsBox || !projBox || !contactBox) {
+  if (!aboutBox || !expBox || !projBox || !contactBox) {
       setDims({ width, height: docHeight })
       setPoints(null)
       return
@@ -54,9 +54,9 @@ export default function ScrollingPath(){
       x: aboutBox.x + aboutBox.width / 2,
       y: aboutBox.y + 0,
     }
-    const skills = {
-      x: skillsBox.x + skillsBox.width / 2,
-      y: skillsBox.y + skillsBox.height / 2,
+    const experience = {
+      x: expBox.x + expBox.width / 2,
+      y: expBox.y + expBox.height / 2,
     }
     const projects = {
       // Y at the top of the Project section; X from divider center (fallback to container mid)
@@ -72,7 +72,7 @@ export default function ScrollingPath(){
     }
 
     setDims({ width, height: docHeight })
-    setPoints({ about, skills, projects, contact })
+  setPoints({ about, experience, projects, contact })
   }, [])
 
   React.useEffect(() => {
@@ -91,12 +91,12 @@ export default function ScrollingPath(){
   // Build an orthogonal path (V then H at each section)
   const d = React.useMemo(() => {
     if (!points) return ''
-    const { about, skills, projects, contact } = points
-    // M at about, then V to skills.y, H to skills.x, V to projects.y, H to projects.x, V to contact.y, H to contact.x
+  const { about, experience, projects, contact } = points
+  // M at about, then V to experience.y, H to experience.x, V to projects.y, H to projects.x, V to contact.y, H to contact.x
     return [
       `M ${about.x},${about.y}`,
-      `V ${skills.y}`,
-      `H ${skills.x}`,
+  `V ${experience.y}`,
+  `H ${experience.x}`,
       `V ${projects.y}`,
       `H ${projects.x}`,
       `V ${contact.y}`,

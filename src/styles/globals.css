@@ -225,19 +225,17 @@ nav a {
 }
 
 /* --------------------------------------------------
-   Project cards: dim non-hovered cards globally per carousel
-   Works with Glide.js because hover is purely CSS-based.
-   Logic:
-   - When any .project-card inside a .glide is hovered, reduce opacity of all
-     sibling .project-card elements in the same .glide.
-   - The hovered card keeps full opacity.
-   - No JS required; clones from Glide are regular elements and are covered.
+   Project cards: dim all non-hovered cards across the Projects section
+   Works with Glide.js clones because it's CSS-only.
+   - Hovering any .project-card dims all others within .projects-root
+   - Hovered card stays at full opacity
+   - On hover out, all reset to full opacity
 --------------------------------------------------- */
-.glide:has(.project-card:hover) .project-card {
+.projects-root:has(.project-card:hover) .project-card {
   opacity: 0.3;
 }
 
-.glide .project-card:hover {
+.projects-root .project-card:hover {
   opacity: 1 !important;
 }
 
