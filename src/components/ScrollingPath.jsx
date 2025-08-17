@@ -177,7 +177,7 @@ export default function ScrollingPath(){
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute top-0 left-0 z-30"
+      className="pointer-events-none absolute top-0 left-0 z-30 hidden md:block"
       style={{ width: '100%', height: dims.height }}
     >
   <svg ref={svgRef} width="100%" height={dims.height} viewBox={`0 0 ${dims.width} ${dims.height}`}>

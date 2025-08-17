@@ -219,8 +219,9 @@ export default function Projects(){
   [data-project="Illustrations"] .glide__slides { gap: 0rem !important; padding-left: 1rem !important; }
   [data-project="Illustrations"] .project-card { margin: 0rem !important; }
   /* Smooth dim/undim effect */
-  .project-card img { transition: transform 250ms ease, opacity 220ms ease; }
-  .project-card:hover img { opacity: 0.95; transform: scale(1.01); }
+  .project-card img { transition: transform 250ms ease, opacity 220ms ease, filter 220ms ease; }
+  /* Light dimming: slightly brighten in light mode, tiny change in dark mode */
+  .project-card:hover img { opacity: 0.99; transform: scale(1.01); filter: brightness(1.03) contrast(1.01); }
       `}</style>
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -241,11 +242,11 @@ export default function Projects(){
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-50px' }}
                 transition={{ duration: 0.4, ease: 'easeOut' }}
-                className="flex items-start gap-5"
+                className="flex flex-col md:flex-row items-start gap-3 md:gap-5"
               >
-                <div className="w-40 shrink-0 pt-2 font-semibold tracking-wide text-text-brown dark:text-text-cream">{p.title}</div>
-                <div className="projects-divider relative h-56 w-0" aria-hidden />
-                <div className="relative w-full max-w-5xl group">
+                <div className="w-full md:w-40 shrink-0 pt-2 font-semibold tracking-wide text-text-brown dark:text-text-cream">{p.title}</div>
+                <div className="projects-divider relative h-0 md:h-56 w-0" aria-hidden />
+                <div className="relative w-full max-w-5xl group mt-2 md:mt-0">
                   <div
                     className="glide"
                     ref={el => (glideRefs.current[p.title] = el)}

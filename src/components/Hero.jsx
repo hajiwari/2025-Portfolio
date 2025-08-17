@@ -181,7 +181,7 @@ export default function Hero(){
     if (!showLines) setLinesAnimating(false)
   }, [showLines])
   return (
-    <section id="page-0" className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: 'radial-gradient(circle at bottom left, #0a0907 0%, #000000 40%)' }}>
+    <section id="page-0" className="min-h-screen flex items-center justify-center relative overflow-hidden bg-white dark:bg-black" style={{ background: undefined }}>
   {/* No overlay; inline sequence */}
   {/* Background line removed as requested */}
 
@@ -261,13 +261,13 @@ export default function Hero(){
 
   {/* HAJIME - reveal only after pill hides */}
         {revealHajime && (
-          <div className="relative -mt-1 mb-0 flex justify-center">
+          <div className="relative -mt-1 mb-2 md:mb-0 flex justify-center">
             {/* Base filled title (under hero image by DOM order and z-0) */}
             <motion.h1
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6 }}
-              className="text-[10rem] md:text-[16rem] lg:text-[20rem] xl:text-[24rem] font-bold leading-none relative z-0 text-accent invisible"
+              className="text-[7rem] sm:text-[10rem] md:text-[16rem] lg:text-[20rem] xl:text-[24rem] font-bold leading-none relative z-0 text-accent invisible"
               style={{ 
                 letterSpacing: '0.08em',
                 fontFamily: 'Bebas Neue, Anton, Impact, "Arial Black", sans-serif',
@@ -287,7 +287,7 @@ export default function Hero(){
               className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center"
             >
               <div
-                className="font-bold leading-none text-center text-[10rem] md:text-[16rem] lg:text-[20rem] xl:text-[24rem]"
+                className="font-bold leading-none text-center text-[7rem] sm:text-[10rem] md:text-[16rem] lg:text-[20rem] xl:text-[24rem] text-text-brown dark:text-[#dac8ab]"
                 style={{ letterSpacing: '0.08em' }}
               >
                 <svg
@@ -300,7 +300,7 @@ export default function Hero(){
                     x="50%"
                     y="0.8em"
                     textAnchor="middle"
-                    fill="#dac8ab"
+                    fill="currentColor"
                     style={{
                       fontFamily: 'Bebas Neue, Anton, Impact, "Arial Black", sans-serif',
                       fontWeight: 700,
@@ -319,10 +319,10 @@ export default function Hero(){
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.05 }}
-              className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center"
+              className="pointer-events-none absolute inset-0 z-10 hidden md:flex items-center justify-center"
             >
               <div
-                className="font-bold leading-none text-center text-[10rem] md:text-[16rem] lg:text-[20rem] xl:text-[24rem]"
+                className="font-bold leading-none text-center text-[7rem] sm:text-[10rem] md:text-[16rem] lg:text-[20rem] xl:text-[24rem]"
                 style={{ letterSpacing: '0.08em' }}
               >
                 <svg
@@ -370,7 +370,7 @@ export default function Hero(){
             layoutId="full-name"
             layout
             transition={{ type: 'spring', stiffness: 240, damping: 32 }}
-            className="-mt-6 md:-mt-8 lg:-mt-10 mb-7 md:mb-10 text-center relative z-20 w-full flex justify-center"
+            className="mt-4 md:-mt-8 lg:-mt-10 mb-6 md:mb-10 text-center relative z-20 w-full flex justify-center"
           >
             <motion.div
               initial={{ scale: 1 }}
@@ -401,7 +401,7 @@ export default function Hero(){
 
         {/* CTA Buttons */}
         {revealHajime && (
-          <motion.div 
+      <motion.div 
             initial={{ y: 20, opacity: 0 }} 
             animate={{ y: 0, opacity: 1 }} 
             transition={{ duration: 0.6, delay: 0.3 }}
@@ -411,7 +411,7 @@ export default function Hero(){
               whileHover={{ scale: 1.05, y: -2 }} 
               whileTap={{ scale: 0.98 }} 
               href="#page-3" 
-              className="group relative inline-flex items-center justify-center px-8 py-4 bg-accent text-text-cream font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
+        className="group relative inline-flex items-center justify-center px-5 py-3 md:px-8 md:py-4 bg-accent text-text-cream font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden text-sm md:text-base"
             >
               <span className="relative z-10">GET IN TOUCH</span>
               <div className="absolute inset-0 bg-gradient-to-r from-accent to-brown-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -421,7 +421,7 @@ export default function Hero(){
               whileHover={{ scale: 1.05, y: -2 }} 
               whileTap={{ scale: 0.98 }}
               href="#page-2" 
-              className="group inline-flex items-center justify-center px-8 py-4 border-2 border-text-brown dark:border-text-cream text-text-brown dark:text-text-cream font-semibold rounded-xl hover:bg-text-brown hover:text-text-cream dark:hover:bg-text-cream dark:hover:text-text-brown transition-all duration-300"
+        className="group inline-flex items-center justify-center px-5 py-3 md:px-8 md:py-4 border-2 border-text-brown dark:border-text-cream text-text-brown dark:text-text-cream font-semibold rounded-xl hover:bg-text-brown hover:text-text-cream dark:hover:bg-text-cream dark:hover:text-text-brown transition-all duration-300 text-sm md:text-base"
             >
               VIEW PROJECTS
               <svg className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -499,7 +499,7 @@ export default function Hero(){
 
       {/* Hero image - BRUSH STROKE PAINT REVEAL EFFECT */}
     {revealHajime && (
-  <div className="absolute bottom-0 right-0 z-0 overflow-hidden">
+  <div className="absolute bottom-0 right-0 z-0 overflow-hidden hidden md:block">
           <motion.div
             className="relative w-96 h-[30rem] md:w-[32rem] md:h-[38rem] lg:w-[40rem] lg:h-[48rem] xl:w-[48rem] xl:h-[56rem]"
           >

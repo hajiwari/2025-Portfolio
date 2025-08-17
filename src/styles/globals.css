@@ -296,7 +296,8 @@ nav a {
   bottom: 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(to right, rgba(0, 0, 0, 0.8) 0%, transparent 20%, transparent 80%, rgba(0, 0, 0, 0.8) 100%);
+  /* Hide vignette in light mode */
+  background: none;
 }
 
 .dark .projects-criss-cross::before {

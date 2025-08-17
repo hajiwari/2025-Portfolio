@@ -73,11 +73,11 @@ export default function Experience(){
                 {/* Left column */}
                 <div className={
                   isLeft
-                    ? 'md:order-none text-right flex md:justify-end items-start'
-                    : 'md:order-2 text-left flex md:justify-start items-start'
+                    ? 'md:order-none text-left md:text-right flex justify-start md:justify-end items-start'
+                    : 'md:order-2 text-left md:text-left flex justify-start md:justify-start items-start'
                 }>
                   <div className="md:max-w-md">
-                    <div className={isLeft ? 'text-right' : 'text-left'}>
+                    <div className={isLeft ? 'text-left md:text-right' : 'text-left md:text-left'}>
                       <h3 className="text-xl md:text-2xl font-heading font-semibold tracking-wide text-brown-400 dark:text-brown-400">
                         {job.title}
                       </h3>
@@ -88,7 +88,7 @@ export default function Experience(){
                         {job.year}
                       </p>
                       {job.icon && (
-                        <div className={isLeft ? 'mt-3 flex justify-end' : 'mt-3 flex justify-start'}>
+                        <div className={isLeft ? 'mt-3 flex justify-start md:justify-end' : 'mt-3 flex justify-start md:justify-start'}>
                           <img
                             src={job.icon}
                             alt={`${job.company} logo`}
@@ -104,8 +104,8 @@ export default function Experience(){
                 {/* Right column */}
                 <div className={
                   isLeft
-                    ? 'mt-4 md:mt-0 md:order-2 text-left flex md:justify-start items-start'
-                    : 'mt-4 md:mt-0 md:order-none text-right flex md:justify-end items-start'
+                    ? 'mt-4 md:mt-0 md:order-2 text-left md:text-left flex justify-start md:justify-start items-start'
+                    : 'mt-4 md:mt-0 md:order-none text-left md:text-right flex justify-start md:justify-end items-start'
                 }>
                   <p className="md:max-w-md text-base md:text-lg text-text-brown dark:text-text-cream leading-relaxed">
                     {job.description}
