@@ -1,9 +1,15 @@
 import React from 'react'
-import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { motion, AnimatePresence, LayoutGroup, useAnimationFrame } from 'framer-motion'
+import { useEffect, useState, useMemo, useRef } from 'react'
 
 export default function Hero(){
   const [scrolled, setScrolled] = useState(false)
+  const [showLines, setShowLines] = useState(false)
+  const [linesAnimating, setLinesAnimating] = useState(false)
+  const [waveStartKey, setWaveStartKey] = useState(0)
+  const heroReadySent = useRef(false)
+  const heroImgLoaded = useRef(false)
+  const firstStrokeStarted = useRef(false)
   const [typedText, setTypedText] = useState('')
   const [intro, setIntro] = useState(false) // No overlay; sequence runs inline
   const [hiNearFinal, setHiNearFinal] = useState(false) // deprecated, kept for layout stability (no-op)
@@ -16,6 +22,105 @@ export default function Hero(){
   const fullText = 'HAJIME'
   const [nameShrink, setNameShrink] = useState(false)
 
+  // Build meta for lines that meet at x=0; shape animated per-line (not as a group)
+  const abstractLines = useMemo(() => {
+    const W = 1440
+    const yAnchor = 450
+  const count = 1
+    const baseSpacing = 12
+  const ampBase = 120 // very tall peak at center
+    const grads = ['url(#heroLineA)', 'url(#heroLineB)', 'url(#heroLineC)']
+    const lines = []
+    for (let i = 0; i < count; i++) {
+      const idxFromCenter = i - Math.floor((count - 1) / 2)
+      lines.push({
+        idx: i,
+        idxFromCenter,
+        stroke: grads[i % grads.length],
+        width: 1.4 + ((i % 5) * 0.12),
+        opacity: 0.2 - (i % 7) * 0.007,
+        amp: ampBase, // same amplitude for consistent shape across lines
+        offset: idxFromCenter * baseSpacing,
+        endX: W,
+      })
+    }
+    return { lines, W, yAnchor, centerIdx: Math.floor((count - 1) / 2) }
+  }, [])
+
+  // Smoothstep helper for gradual dispersion near the anchor
+  const smoothstep = (edge0, edge1, x) => {
+    const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)))
+    return t * t * (3 - 2 * t)
+  }
+
+  // Preload hero image so reveal isn't blocked by network
+  useEffect(() => {
+    const img = new Image()
+    img.decoding = 'async'
+    img.loading = 'eager'
+    img.src = '/assets/hero.jpg'
+    img.onload = () => { heroImgLoaded.current = true }
+  }, [])
+
+  // Per-line animated path that keeps the start pinned at (0, yAnchor)
+  const LinePath = ({ meta, config }) => {
+    const pathRef = useRef(null)
+    const startRef = useRef(0)
+  useEffect(() => { startRef.current = performance.now() }, [])
+  // Reset the phase start when runId changes (e.g., blur completes)
+  useEffect(() => { startRef.current = performance.now() }, [config.runId])
+    useAnimationFrame((t) => {
+      const elapsed = (t - startRef.current) / 1000
+  const phaseTime = linesAnimating ? Math.max(0, elapsed - config.delay) : 0
+      const phase = phaseTime * config.speed // same speed for all lines
+  const steps = 420
+      let d = `M 0 ${config.yAnchor}`
+      for (let s = 1; s <= steps; s++) {
+        const tt = s / steps
+        const x = tt * meta.endX
+        // Hold perfectly straight for the first ~20% of width, then ramp in smoothly
+        const env = smoothstep(config.anchorHoldPx, config.anchorHoldPx + config.anchorRampPx, x)
+        // Normalize x to the post-hold region so we get exactly two humps total (one full cycle)
+        const xRel = Math.max(0, x - config.anchorHoldPx)
+  const denom = Math.max(1, meta.endX - config.anchorHoldPx)
+  let tWave = Math.pow(xRel / denom, config.phaseGamma)
+  // slight horizontal wobble so it isn't purely vertical
+  tWave = Math.max(0, Math.min(1, tWave + 0.012 * Math.sin(phase * 0.35)))
+  const endBoost = 1 - Math.pow(1 - tt, config.widenEndBoostExp)
+  const widenTail = 1 + (config.widenEndGain * Math.pow(tt, config.widenEndGainExp))
+  // Temporal pulse so right-end gaps breathe over time (cloth-like)
+  const gapPulse = 1 + (config.widenTemporalAmp * Math.sin(phase * config.widenTemporalRate)) * Math.pow(tt, config.widenTemporalExp)
+  const widenEase = Math.pow(tt, config.widenExp) * endBoost * widenTail * gapPulse // strong, time-varying widening near end
+  // (diag bias removed)
+        // Amplitude decay so second hump is flatter than first
+        const ampEnv = 1 - (config.ampDecay * Math.pow(tWave, config.ampDecayExp))
+        // Traveling wave: natural up/down bumps moving across the width
+  const spatial = Math.sin(Math.PI * tWave) // fixed crest at center
+  const ampMod = Math.sin(phase + 0.001) // start with non-zero velocity for immediate motion
+        const frontEnv = smoothstep(config.frontStart, config.frontEnd, tWave) // subtle near left, full afterward
+        const ampCenter = Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, tWave))), config.centerAmpExp) // tallest at center
+        const ampDrift = 0.7 + 0.25 * Math.sin(phase * 0.9) + 0.15 * Math.sin(phase * 0.41 + 0.7)
+        const y = config.yAnchor
+          + spatial * (meta.amp * ampEnv) * frontEnv * ampCenter * ampMod * ampDrift * env
+          + meta.offset * widenEase * env
+        d += ` L ${x} ${y}`
+      }
+      if (pathRef.current) pathRef.current.setAttribute('d', d)
+    })
+    return (
+      <path
+        ref={pathRef}
+        d={`M 0 ${config.yAnchor} L ${meta.endX} ${config.yAnchor}`}
+        fill="none"
+        stroke={meta.stroke}
+        strokeOpacity={meta.opacity}
+        strokeWidth={meta.width}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    )
+  }
+
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY
@@ -25,6 +130,13 @@ export default function Hero(){
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // No global auto-start; reveal is controlled by brush start + image load
+
+  // Reset motion flag when hidden
+  useEffect(() => {
+    if (!showLines) setLinesAnimating(false)
+  }, [showLines])
 
   // Stage the sequence inline on mount
   useEffect(() => {
@@ -63,14 +175,15 @@ export default function Hero(){
       setNameShrink(false)
     }
   }, [revealHajime])
+
+  // Reset motion flag if lines are ever hidden again
+  useEffect(() => {
+    if (!showLines) setLinesAnimating(false)
+  }, [showLines])
   return (
     <section id="page-0" className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: 'radial-gradient(circle at bottom left, #0a0907 0%, #000000 40%)' }}>
   {/* No overlay; inline sequence */}
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 opacity-10 dark:opacity-5">
-        <div className="absolute top-20 right-20 w-32 h-32 bg-accent rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-20 w-24 h-24 bg-brown-300 rounded-full blur-2xl"></div>
-      </div>
+  {/* Background line removed as requested */}
 
   <LayoutGroup>
   <div className="max-w-7xl mx-auto px-6 lg:px-8 relative w-full min-h-screen flex flex-col items-center justify-center">
@@ -219,13 +332,15 @@ export default function Hero(){
                   style={{ overflow: 'visible', display: 'block' }}
                 >
                   <defs>
+                    {/* Outside-only outline with slight inner overlap to avoid seams */}
                     <filter id="hajime-outline" filterUnits="userSpaceOnUse" x="-150%" y="-150%" width="400%" height="400%" colorInterpolationFilters="sRGB">
-                      <feMorphology in="SourceAlpha" operator="dilate" radius="2" result="dilated" />
-                      <feComposite in="dilated" in2="SourceAlpha" operator="out" result="outerOutline" />
-                      <feFlood floodColor="#dac8ab" result="outlineColor" />
-                      <feComposite in="outlineColor" in2="outerOutline" operator="in" result="coloredOutline" />
+                      <feMorphology in="SourceAlpha" operator="dilate" radius="2.2" result="dilate" />
+                      <feMorphology in="SourceAlpha" operator="erode" radius="0.6" result="eroded" />
+                      <feComposite in="dilate" in2="eroded" operator="out" result="ring" />
+                      <feFlood floodColor="#dac8ab" result="color" />
+                      <feComposite in="color" in2="ring" operator="in" result="coloredRing" />
                       <feMerge>
-                        <feMergeNode in="coloredOutline" />
+                        <feMergeNode in="coloredRing" />
                       </feMerge>
                     </filter>
                   </defs>
@@ -317,35 +432,7 @@ export default function Hero(){
         )}
       </div>
 
-      {/* Floating decorative elements */}
-      <motion.div
-        animate={{ 
-          y: [0, -10, 0],
-          rotate: [0, 5, 0]
-        }}
-        transition={{ 
-          duration: 4,
-          repeat: Infinity,
-          repeatType: "reverse",
-          ease: "easeInOut"
-        }}
-        className="absolute top-20 left-10 w-6 h-6 bg-accent/30 rounded-full blur-sm"
-      ></motion.div>
-      
-      <motion.div
-        animate={{ 
-          y: [0, 15, 0],
-          rotate: [0, -5, 0]
-        }}
-        transition={{ 
-          duration: 3,
-          repeat: Infinity,
-          repeatType: "reverse",
-          ease: "easeInOut",
-          delay: 0.5
-        }}
-        className="absolute bottom-20 right-10 w-4 h-4 bg-brown-300/40 rounded-full blur-sm"
-      ></motion.div>
+  {/* Bokeh animations removed */}
 
   {/* Scroll indicator - Hide when scrolled */}
   {revealHajime && (
@@ -356,7 +443,7 @@ export default function Hero(){
             y: scrolled ? 20 : 0 
           }} 
           transition={{ duration: 0.3 }}
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
+          className="absolute bottom-8 inset-x-0 flex justify-center"
         >
           <motion.div
             animate={{ y: [0, 8, 0] }}
@@ -439,11 +526,16 @@ export default function Hero(){
         delay: 0.8 + i * 0.167,
                 ease: "linear",
               }}
+              onAnimationStart={() => {
+                if (i === 0) {
+                  firstStrokeStarted.current = true
+                  if (heroImgLoaded.current && !showLines) setShowLines(true)
+                }
+              }}
               onAnimationComplete={() => {
-                if (i === 7) {
-                  try {
-                    window.dispatchEvent(new CustomEvent('hero:ready'))
-                  } catch (e) {}
+                if (i === 7 && !heroReadySent.current) {
+                  heroReadySent.current = true
+                  try { window.dispatchEvent(new CustomEvent('hero:ready')) } catch (e) {}
                 }
               }}
             >
@@ -453,6 +545,14 @@ export default function Hero(){
                 className="w-full h-full object-cover"
                 style={{
                   filter: `brightness(${0.99 + (i % 2) * 0.005}) contrast(${1.005 + (i % 2) * 0.005})`,
+                }}
+                onLoad={() => {
+                  heroImgLoaded.current = true
+                  if (firstStrokeStarted.current && !showLines) setShowLines(true)
+                  if (!heroReadySent.current) {
+                    heroReadySent.current = true
+                    try { window.dispatchEvent(new CustomEvent('hero:ready')) } catch (e) {}
+                  }
                 }}
               />
             </motion.div>

@@ -243,3 +243,73 @@ nav a {
 .project-card {
   transition: opacity 200ms ease, transform 300ms cubic-bezier(0.165, 0.84, 0.44, 1);
 }
+
+/* Animated criss-cross squares background (Projects section only) */
+.projects-criss-cross {
+  position: relative;
+  isolation: isolate; /* keep pseudo-element behind content */
+}
+
+.projects-criss-cross::before {
+  /* Config */
+  --sq: 64px; /* square size */
+  --line: rgba(52, 40, 36, 0.16); /* grid line color (light) */
+
+  content: "";
+  position: absolute;
+  /* Expand beyond section to avoid revealing edges during movement */
+  /* Large coverage to avoid any edge exposure during animation */
+  top: -120%;
+  left: -120%;
+  right: -120%;
+  bottom: -120%;
+  z-index: 0;
+  pointer-events: none;
+  
+  /* Maximum performance optimization */
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+
+  /* Grid layers: only H/V lines to avoid triangle blink */
+  background-image:
+    repeating-linear-gradient(0deg, var(--line) 0 2px, transparent 2px var(--sq)),
+    repeating-linear-gradient(90deg, var(--line) 0 2px, transparent 2px var(--sq));
+  background-size: var(--sq) var(--sq), var(--sq) var(--sq);
+  background-position: 0 0, 0 0;
+  
+  animation: projectsGridDrift 4s linear infinite;
+}
+
+/* Vignette effect overlay */
+.projects-criss-cross::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.8) 0%, transparent 20%, transparent 80%, rgba(0, 0, 0, 0.8) 100%);
+}
+
+.dark .projects-criss-cross::before {
+  --line: rgba(235, 220, 196, 0.18);
+}
+
+.dark .projects-criss-cross::after {
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.8) 0%, transparent 20%, transparent 80%, rgba(0, 0, 0, 0.8) 100%);
+}
+
+@keyframes projectsGridDrift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    /* move diagonally bottom-right by one full tile to loop seamlessly */
+    transform: translate3d(var(--sq), var(--sq), 0);
+  }
+}
