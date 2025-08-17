@@ -4,13 +4,23 @@ import Glide from '@glidejs/glide'
 import '@glidejs/glide/dist/css/glide.core.min.css'
 import '@glidejs/glide/dist/css/glide.theme.min.css'
 
+// Only keep the requested sections; remove unused fields
 const projects = [
   {
+    title: 'Web developments',
+    pageAspect: 16 / 10,
+    cardHeightRem: 12,
+    images: [
+      { src: 'https://i.ibb.co/ymVbN3k9/Figuro1.gif', href: 'https://figuroshop.vercel.app/' },
+      { src: 'https://i.ibb.co/Rpz1y3B7/Evolve-Elsevier.gif', href: 'https://evolve-project.vercel.app/' },
+      { src: 'https://i.ibb.co/CKn71q4D/ARTIFICI.png', href: 'https://ai-chatbot-beta-jade.vercel.app/' },
+      { src: 'https://i.ibb.co/k6xgXNSg/Studio-V.gif', href: 'https://studio-v-omega.vercel.app/' },
+    ],
+  },
+  {
     title: 'Illustrations',
-    colors: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'],
     pageAspect: 4 / 5,
     cardHeightRem: 16,
-    cardCount: 6,
     images: [
       'https://i.ibb.co/j9pFzX5v/2.png',
       'https://i.ibb.co/HTbyX88C/3.png',
@@ -19,10 +29,8 @@ const projects = [
   },
   {
     title: 'Ad posters',
-    colors: ['#96CEB4', '#FFEAA7', '#DDA0DD', '#FF6B6B', '#4ECDC4', '#45B7D1'],
     pageAspect: 4 / 5,
     cardHeightRem: 14,
-    cardCount: 6,
     images: [
       'https://i.ibb.co/mV0hBpWN/1.png',
       'https://i.ibb.co/XxqVQmN1/2.png',
@@ -35,42 +43,14 @@ const projects = [
       'https://i.ibb.co/GfGrwNZ5/9.png',
     ],
   },
-  {
-    title: 'Presentation',
-    colors: ['#74B9FF', '#FD79A8', '#FDCB6E', '#00B894', '#00CEC9', '#55A3FF'],
-    pageAspect: 16 / 9,
-    cardHeightRem: 12,
-    cardCount: 6,
-  },
-  {
-    title: 'Web Design',
-    colors: ['#6C5CE7', '#A29BFE', '#FD79A8', '#74B9FF', '#FDCB6E', '#00B894'],
-    pageAspect: 4 / 3,
-    cardHeightRem: 14,
-    cardCount: 6,
-  },
-  {
-    title: 'Mobile Design',
-    colors: ['#00B894', '#00CEC9', '#55A3FF', '#6C5CE7', '#A29BFE', '#FD79A8'],
-    pageAspect: 9 / 16,
-    cardHeightRem: 18,
-    cardCount: 6,
-  },
-  {
-    title: 'Web developments',
-    colors: ['#E17055', '#FDCB6E', '#6C5CE7', '#00B894', '#FF6B6B', '#4ECDC4'],
-    pageAspect: 16 / 10,
-    cardHeightRem: 12,
-    cardCount: 6,
-  },
 ]
 
 export default function Projects(){
   const ref = React.useRef(null)
   const glideRefs = React.useRef({})
+  const [adPosterWidths, setAdPosterWidths] = React.useState({})
 
   React.useEffect(() => {
-    // Lazy-init Glide when each carousel enters the viewport
     const observers = []
     projects.forEach((project, projectIndex) => {
       const glideElement = glideRefs.current[project.title]
@@ -90,37 +70,81 @@ export default function Projects(){
           const baseHRem = project.cardHeightRem ?? 14
           const derivedWidthRem = project.pageAspect ? baseHRem * project.pageAspect : 20
           const isNarrowCard = derivedWidthRem < 12
-          const adjustedGap = isNarrowCard ? 20 : 30
-          const adjustedPeek = isNarrowCard ? 40 : 60
+          const baseGap = isNarrowCard ? 20 : 30
+          const basePeek = isNarrowCard ? 40 : 60
+          const isWebDev = project.title === 'Web developments'
+          const isIllustrations = project.title === 'Illustrations'
+          const adjustedGap = isWebDev ? 16 : (isIllustrations ? 0 : baseGap)
+          // Stronger left cut for Illustrations, larger peek overall for Web Dev
+          const adjustedPeekBefore = isWebDev ? 64 : (isIllustrations ? 48 : basePeek)
+          const adjustedPeekAfter  = isWebDev ? 64 : (isIllustrations ? 24 : basePeek)
+          const animDuration = isIllustrations ? 700 : 700
+          const animEase = 'cubic-bezier(0.22, 1, 0.36, 1)'
 
-          const effectiveCount = (project.images && project.images.length > 0) ? project.images.length : project.cardCount
+          const effectiveCount = (project.images && project.images.length > 0) ? project.images.length : 1
           const glide = new Glide(glideElement, {
             type: 'carousel',
             startAt: isLeftToRight ? 0 : Math.max(0, (effectiveCount || 1) - 1),
-            perView: (project.title === 'Illustrations' || project.title === 'Ad posters' || project.title === 'Mobile Design') ? 4 : 3,
+            perView:
+              (project.title === 'Ad posters')
+                ? 4
+                : (project.title === 'Illustrations'
+                    ? Math.min(4, effectiveCount || 1)
+                    : (project.title === 'Web developments' ? 4 : 3)
+                  ),
             gap: adjustedGap,
-            peek: { before: adjustedPeek, after: adjustedPeek },
+            peek: { before: adjustedPeekBefore, after: adjustedPeekAfter },
             autoplay: false,
             hoverpause: true,
             keyboard: true,
-            animationDuration: 600,
-            animationTimingFunc: 'cubic-bezier(0.165, 0.840, 0.440, 1.000)',
+            animationDuration: animDuration,
+            animationTimingFunc: animEase,
             direction: isLeftToRight ? 'ltr' : 'rtl',
             breakpoints: {
               1024: {
-                perView: (project.title === 'Illustrations' || project.title === 'Ad posters' || project.title === 'Mobile Design') ? 3 : 2,
+                perView:
+                  (project.title === 'Ad posters')
+                    ? 3
+                    : (project.title === 'Illustrations'
+                        ? Math.min(3, effectiveCount || 1)
+                        : (project.title === 'Web developments' ? 3 : 2)
+                      ),
                 gap: adjustedGap,
-                peek: { before: adjustedPeek, after: adjustedPeek }
+                peek: { before: adjustedPeekBefore, after: adjustedPeekAfter }
               },
               768: {
-                perView: (project.title === 'Illustrations' || project.title === 'Ad posters' || project.title === 'Mobile Design') ? 2 : 1,
+                perView:
+                  (project.title === 'Ad posters')
+                    ? 2
+                    : (project.title === 'Illustrations'
+                        ? Math.min(2, effectiveCount || 1)
+                        : (project.title === 'Web developments' ? 2 : 1)
+                      ),
                 gap: adjustedGap,
-                peek: { before: adjustedPeek, after: adjustedPeek }
+                peek: { before: adjustedPeekBefore, after: adjustedPeekAfter }
               }
             }
           })
 
           glide.mount()
+          // Pause autoplay when hovering arrow buttons
+          const arrows = glideElement.querySelectorAll('.glide__arrow')
+          const removeArrowListeners = []
+          arrows.forEach(btn => {
+            const onEnter = () => {
+              try { glide.pause() } catch {}
+            }
+            const onLeave = () => {
+              try { glide.play() } catch {}
+            }
+            btn.addEventListener('mouseenter', onEnter)
+            btn.addEventListener('mouseleave', onLeave)
+            removeArrowListeners.push(() => {
+              btn.removeEventListener('mouseenter', onEnter)
+              btn.removeEventListener('mouseleave', onLeave)
+            })
+          })
+          glideRefs.current[`${project.title}_arrowsCleanup`] = removeArrowListeners
           setTimeout(() => {
             glide.update({ autoplay: 4000 })
             glide.play()
@@ -136,7 +160,6 @@ export default function Projects(){
       observers.push(observer)
     })
 
-    // Cleanup
     return () => {
       Object.keys(glideRefs.current).forEach(key => {
         if (key.endsWith('_instance')) {
@@ -144,12 +167,61 @@ export default function Projects(){
           if (glide && glide.destroy) glide.destroy()
         }
       })
+      Object.keys(glideRefs.current).forEach(key => {
+        if (key.endsWith('_arrowsCleanup')) {
+          const cleaners = glideRefs.current[key]
+          if (Array.isArray(cleaners)) {
+            cleaners.forEach(fn => { try { fn() } catch {} })
+          }
+        }
+      })
       observers.forEach(o => o.disconnect())
     }
   }, [])
 
+  React.useEffect(() => {
+    const glide = glideRefs.current['Ad posters_instance']
+    if (glide && glide.update) {
+      try {
+        glide.update({})
+      } catch {}
+    }
+  }, [adPosterWidths])
+
+  React.useEffect(() => {
+  projects.forEach(p => {
+      if (p.images && p.images.length) {
+        p.images.forEach(item => {
+          const src = typeof item === 'string' ? item : item?.src
+          if (src) {
+            const img = new Image()
+            img.decoding = 'async'
+            img.loading = 'eager'
+      try { img.fetchPriority = p.title === 'Illustrations' ? 'high' : 'auto' } catch {}
+            img.src = src
+          }
+        })
+      }
+    })
+  }, [])
+
   return (
     <section id="page-2" className="py-16 bg-text-cream dark:bg-darker-bg projects-criss-cross overflow-hidden">
+    <style>{`
+        [data-project="Ad posters"] .glide__slides { display: flex; }
+        [data-project="Ad posters"] .glide__slide { width: auto !important; }
+        [data-project="Ad posters"] img { display: block; }
+        [data-project="Web developments"] .project-card { transition: transform 300ms; }
+        [data-project="Web developments"] .project-card:hover { transform: scale(1.02); }
+        [data-project="Web developments"] .glide__slides { display: flex; gap: 1rem !important; padding: 0 !important; }
+        [data-project="Web developments"] .glide__slide { width: auto !important; padding: 0 !important; margin: 0 !important; }
+  /* Tighten Illustrations more */
+  [data-project="Illustrations"] .glide__slides { gap: 0rem !important; padding-left: 1rem !important; }
+  [data-project="Illustrations"] .project-card { margin: 0rem !important; }
+  /* Smooth dim/undim effect */
+  .project-card img { transition: transform 250ms ease, opacity 220ms ease; }
+  .project-card:hover img { opacity: 0.95; transform: scale(1.01); }
+      `}</style>
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -159,7 +231,6 @@ export default function Projects(){
       >
         <div className="flex items-end justify-between">
           <h2 className="text-2xl font-heading font-bold tracking-wider text-text-brown dark:text-text-cream">PROJECTS</h2>
-          <a href="#page-2" className="text-sm text-accent hover:text-brown-600 dark:hover:text-brown-400 transition-colors">SEE MY PROJECTS</a>
         </div>
         <div ref={ref} className="relative mt-8 projects-root">
           <div className="space-y-10">
@@ -172,13 +243,8 @@ export default function Projects(){
                 transition={{ duration: 0.4, ease: 'easeOut' }}
                 className="flex items-start gap-5"
               >
-                {/* Caption outside, at the left of the stack */}
                 <div className="w-40 shrink-0 pt-2 font-semibold tracking-wide text-text-brown dark:text-text-cream">{p.title}</div>
-
-                {/* Invisible divider used to anchor the global scrolling path between caption and cards */}
                 <div className="projects-divider relative h-56 w-0" aria-hidden />
-
-                {/* Glide Carousel */}
                 <div className="relative w-full max-w-5xl group">
                   <div
                     className="glide"
@@ -188,81 +254,114 @@ export default function Projects(){
                     style={{
                       paddingTop: '0.5rem',
                       paddingBottom: '0.5rem',
-                      paddingLeft: '2rem',
-                      paddingRight: '2rem',
+                      paddingLeft: p.title === 'Web developments' ? '0.5rem' : (p.title === 'Illustrations' ? '0rem' : '2rem'),
+                      paddingRight: p.title === 'Web developments' ? '0.5rem' : '2rem',
                     }}
                   >
                     <div className="glide__track" data-glide-el="track">
                       <ul className="glide__slides">
                         {p.images && p.images.length > 0
-                          ? p.images.map((src, idx) => {
+                          ? p.images.map((imgItem, idx) => {
+                              const src = typeof imgItem === 'string' ? imgItem : imgItem?.src
+                              const href = typeof imgItem === 'string' ? undefined : imgItem?.href
                               const baseHRem = p.cardHeightRem ?? 14
                               const derivedWidthRem = p.pageAspect ? baseHRem * p.pageAspect : 20
                               const isHighPriority = (projectIndex % 2 === 0)
                                 ? idx === 0
-                                : idx === ((p.images?.length || (p.cardCount || 1)) - 1)
+                                : idx === ((p.images?.length || 1) - 1)
+                              const isAdPosters = p.title === 'Ad posters'
+                              const isWebDevCard = p.title === 'Web developments'
+                              const isIllustrations = p.title === 'Illustrations'
+                              const key = `${p.title}-${idx}`
+                              const computedWidthRem = isAdPosters && adPosterWidths[key] ? adPosterWidths[key] : derivedWidthRem
                               return (
-                                <li key={`${p.title}-img-${idx}`} className="glide__slide">
-                                  <div
-                                    className="project-card overflow-hidden rounded-2xl shadow-lg cursor-pointer transition-all duration-300 hover:scale-[1.08] bg-gray-200"
-                                    style={{
-                                      width: `${derivedWidthRem}rem`,
-                                      height: `${baseHRem}rem`,
-                                      margin: '0.25rem',
-                                    }}
-                                  >
-                                    <img
-                                      src={src}
-                                      alt={`${p.title} ${idx + 1}`}
-                                      className="w-full h-full object-cover"
-                                      loading="lazy"
-                                      decoding="async"
-                                      fetchpriority={isHighPriority ? 'high' : 'auto'}
-                                    />
-                                  </div>
+                                <li
+                                  key={`${p.title}-img-${idx}`}
+                                  className="glide__slide"
+                                  style={isAdPosters ? { width: `${computedWidthRem}rem` } : undefined}
+                                >
+                                  {href ? (
+                                    <a href={href} target="_blank" rel="noopener noreferrer" className="block">
+                                      <div
+                                        className="project-card overflow-hidden rounded-2xl shadow-lg cursor-pointer transition-all duration-300 hover:scale-[1.08]"
+                                        style={{
+                                          width: `${computedWidthRem}rem`,
+                                          height: `${baseHRem}rem`,
+                                          margin: isWebDevCard ? '0rem' : '0.25rem',
+                                        }}
+                                      >
+                                        <img
+                                          src={src}
+                                          alt={`${p.title} ${idx + 1}`}
+                                          className={isAdPosters ? 'block w-full h-full object-contain' : 'block w-full h-full object-cover'}
+                                          onLoad={isAdPosters ? (e => {
+                                            const img = e.currentTarget
+                                            const naturalW = img.naturalWidth
+                                            const naturalH = img.naturalHeight
+                                            if (naturalW && naturalH) {
+                                              const ratio = naturalW / naturalH
+                                              const wRem = baseHRem * ratio
+                                              setAdPosterWidths(prev => ({ ...prev, [key]: wRem }))
+                                            }
+                                          }) : undefined}
+                                          loading={isWebDevCard ? 'eager' : (isIllustrations ? 'eager' : 'lazy')}
+                                          decoding="async"
+                                          fetchpriority={(isHighPriority || isWebDevCard || isIllustrations) ? 'high' : 'auto'}
+                                          draggable={false}
+                                        />
+                                      </div>
+                                    </a>
+                                  ) : (
+                                    <div
+                                      className="project-card overflow-hidden rounded-2xl shadow-lg cursor-pointer transition-all duration-300 hover:scale-[1.08]"
+                                      style={{
+                                        width: `${computedWidthRem}rem`,
+                                        height: `${baseHRem}rem`,
+                                        margin: isWebDevCard ? '0rem' : '0.25rem',
+                                      }}
+                                    >
+                                      <img
+                                        src={src}
+                                        alt={`${p.title} ${idx + 1}`}
+                                        className={isAdPosters ? 'block w-full h-full object-contain' : 'block w-full h-full object-cover'}
+                                        onLoad={isAdPosters ? (e => {
+                                          const img = e.currentTarget
+                                          const naturalW = img.naturalWidth
+                                          const naturalH = img.naturalHeight
+                                          if (naturalW && naturalH) {
+                                            const ratio = naturalW / naturalH
+                                            const wRem = baseHRem * ratio
+                                            setAdPosterWidths(prev => ({ ...prev, [key]: wRem }))
+                                          }
+                                        }) : undefined}
+                                        loading={isWebDevCard ? 'eager' : (isIllustrations ? 'eager' : 'lazy')}
+                                        decoding="async"
+                                        fetchpriority={(isHighPriority || isWebDevCard || isIllustrations) ? 'high' : 'auto'}
+                                        draggable={false}
+                                      />
+                                    </div>
+                                  )}
                                 </li>
                               )
                             })
-                          : Array.from({ length: p.cardCount || 6 }, (_, idx) => {
-                              const color = p.colors?.[idx % p.colors.length] || '#E5E7EB'
-                              const baseHRem = p.cardHeightRem ?? 14
-                              const derivedWidthRem = p.pageAspect ? baseHRem * p.pageAspect : 20
-                              return (
-                                <li key={`${p.title}-slide-${idx}`} className="glide__slide">
-                                  <div
-                                    className="project-card overflow-hidden rounded-2xl shadow-lg cursor-pointer transition-all duration-300 hover:scale-[1.08]"
-                                    style={{
-                                      width: `${derivedWidthRem}rem`,
-                                      height: `${baseHRem}rem`,
-                                      backgroundColor: color,
-                                      margin: '0.25rem',
-                                    }}
-                                  >
-                                    <div className="h-full w-full flex items-center justify-center text-white font-medium text-lg opacity-70">
-                                      {p.title} {idx + 1}
-                                    </div>
-                                  </div>
-                                </li>
-                              )
-                            })}
+                          : null}
                       </ul>
                     </div>
 
-                    {/* Custom Navigation Arrows - Hidden by default, shown on group hover */}
                     <div className="glide__arrows opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-glide-el="controls">
                       <button
-                        className="glide__arrow glide__arrow--left absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 transition-all duration-200"
+            className="glide__arrow glide__arrow--left absolute left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-brown-900 rounded-full flex items-center justify-center shadow-lg hover:bg-brown-900 hover:scale-110 transition-all duration-200"
                         data-glide-dir="<"
                       >
-                        <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-text-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
                       </button>
                       <button
-                        className="glide__arrow glide__arrow--right absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 transition-all duration-200"
+            className="glide__arrow glide__arrow--right absolute right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-brown-900 rounded-full flex items-center justify-center shadow-lg hover:bg-brown-900 hover:scale-110 transition-all duration-200"
                         data-glide-dir=">"
                       >
-                        <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-text-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                       </button>

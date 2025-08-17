@@ -129,9 +129,9 @@ export default function ScrollingPath(){
     const compute = () => {
       if (!points || !len) return
       const middle = window.scrollY + window.innerHeight / 2
-      // Start a bit earlier than About center so the line begins as soon as user scrolls
-      const preStartOffset = window.innerHeight * 0.25
-      const start = points.about.y - preStartOffset
+  // Start exactly at About's top to keep progress centered and not ahead of scroll
+  const preStartOffset = 0
+  const start = points.about.y - preStartOffset
       // Ensure the end is actually reachable by the viewport center at max scroll
       const doc = document.documentElement
       const docHeight = Math.max(doc.scrollHeight, doc.offsetHeight, doc.clientHeight)
@@ -156,7 +156,7 @@ export default function ScrollingPath(){
     if (!len) return
     const middle = window.scrollY + window.innerHeight / 2
     if (!points) return
-  const preStartOffset = window.innerHeight * 0.25
+  const preStartOffset = 0
   const doc = document.documentElement
   const docHeight = Math.max(doc.scrollHeight, doc.offsetHeight, doc.clientHeight)
   const endTarget = points.contact.y

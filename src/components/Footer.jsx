@@ -12,9 +12,6 @@ export default function Footer(){
         className="max-w-6xl mx-auto px-6 text-center text-sm text-text-gray dark:text-text-cream"
       >
         <div>© {new Date().getFullYear()} Hajime • Terms & Support</div>
-        <div className="mt-1">
-          <a className="underline hover:text-accent transition-colors" href="https://www.canva.com/" target="_blank" rel="noreferrer">Designed with Canva</a>
-        </div>
       </motion.div>
     </footer>
   )

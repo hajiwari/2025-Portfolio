@@ -3,36 +3,52 @@ import { motion } from 'framer-motion'
 
 const experiences = [
   {
-    title: 'Frontend Engineer',
-    company: 'Vercel',
-    year: '2024 — Present',
-    icon: 'https://logo.clearbit.com/vercel.com',
+    title: 'Technical Marketing Assistant',
+    company: 'VSL - Social Media Agency (Remote, US)',
+    year: 'Apr 2025 — Present',
+  icon: 'https://assets.cdn.filesafe.space/54PiEFlRWZcrTNV8UnPz/media/67816fccd1dc9840d201b3c1.png',
     description:
-      'Building fast, accessible marketing sites and dashboards. Focus on React, performance budgets, and DX improvements across the team.'
+      'Managed full-funnel ops for 50+ accounts (Meta buying, funnels, CRM) and built GHL automations, tracking, and revenue dashboards to speed sales decisions.'
   },
   {
-    title: 'Web Developer',
-    company: 'GitHub',
-    year: '2022 — 2024',
-    icon: 'https://logo.clearbit.com/github.com',
+    title: 'Technical Associate',
+    company: 'Reed Elsevier Philippines, Quezon City, PH',
+    year: 'Jul 2024',
+  icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRAF2Zflk8QSG1GXcNI1hMhXOfkdyfdI2O81Q&s',
     description:
-      'Shipped UI features for docs and community surfaces. Led migration to Tailwind and component-driven theming with Storybook.'
+      'Primary comms POC with timely, accurate responses; partnered on process improvements to streamline workflows.'
   },
   {
-    title: 'Product Designer / Developer',
-    company: 'Figma',
-    year: '2021 — 2022',
-    icon: 'https://logo.clearbit.com/figma.com',
+    title: 'Technical Support',
+    company: 'Concentrix Corporation, Makati, PH',
+    year: 'Feb 2024 — Jul 2024',
+  icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSJeJhkP_dt5zB6XcJfi0h9rM4BRwvMHJd6Pg&s',
     description:
-      'Prototyped design systems and interactive components. Bridged design/dev handoff and automated token workflows.'
+      'Aligned IT initiatives with business goals and delivered presentations/reports translating technical insights into action.'
   },
   {
-    title: 'Frontend Contractor',
-    company: 'OpenAI',
-    year: '2019 — 2021',
-    icon: 'https://logo.clearbit.com/openai.com',
+    title: 'Web Developer Intern',
+    company: "Employees' Compensation Commission, Makati, PH",
+    year: 'Mar 2024 — Jul 2024',
+  icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRyF0erjo7-Q2ME1qcMcBaM3m74WCS1sGuEDQ&s',
     description:
-      'Delivered landing pages and internal tools. Emphasis on accessibility, responsiveness, and progressive enhancement.'
+      'Built and maintained a WordPress/PHP site on Apache with SQL; shipped features per requirements with senior dev guidance.'
+  },
+  {
+    title: 'Digital/Traditional Graphic Designer',
+    company: 'Haji Graphics, Pangasinan, PH',
+    year: 'Jan 2019 — Oct 2022',
+  icon: null,
+    description:
+      'Designed logos and marketing collateral; managed projects with industry-standard tools to deliver on-brand visuals.'
+  },
+  {
+    title: 'Event Designer',
+    company: 'Hotel and Restaurant Company, Pangasinan, PH',
+    year: 'Feb 2018 — Sep 2021',
+  icon: null,
+    description:
+      'Created event branding (logos, banners, signage) and marketing materials; coordinated on-site visual execution with planners.'
   }
 ]
 
@@ -62,7 +78,7 @@ export default function Experience(){
                 }>
                   <div className="md:max-w-md">
                     <div className={isLeft ? 'text-right' : 'text-left'}>
-                      <h3 className="text-xl md:text-2xl font-heading font-semibold tracking-wide text-text-brown dark:text-text-cream">
+                      <h3 className="text-xl md:text-2xl font-heading font-semibold tracking-wide text-brown-400 dark:text-brown-400">
                         {job.title}
                       </h3>
                       <p className="mt-1 text-base md:text-lg text-text-brown dark:text-text-brown">
@@ -71,14 +87,16 @@ export default function Experience(){
                       <p className="mt-0.5 text-sm md:text-base text-text-gray dark:text-text-cream/80">
                         {job.year}
                       </p>
-                      <div className={isLeft ? 'mt-3 flex justify-end' : 'mt-3 flex justify-start'}>
-                        <img
-                          src={job.icon}
-                          alt={`${job.company} logo`}
-                          className="h-8 w-8 md:h-10 md:w-10 object-contain"
-                          loading="lazy"
-                        />
-                      </div>
+                      {job.icon && (
+                        <div className={isLeft ? 'mt-3 flex justify-end' : 'mt-3 flex justify-start'}>
+                          <img
+                            src={job.icon}
+                            alt={`${job.company} logo`}
+                            className="h-8 w-8 md:h-10 md:w-10 rounded-full object-cover"
+                            loading="lazy"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
