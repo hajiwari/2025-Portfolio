@@ -27,7 +27,7 @@ export default function Contact(){
   }
 
   return (
-    <section id="page-3" className="py-16 bg-text-cream dark:bg-darker-bg">
+    <section id="contact" className="py-16 bg-text-cream dark:bg-darker-bg">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -35,7 +35,7 @@ export default function Contact(){
         transition={{ duration: 0.4, ease: 'easeOut' }}
         className="max-w-5xl mx-auto px-6"
       >
-        <h2 className="text-2xl font-heading font-bold tracking-wider text-text-brown dark:text-text-cream">Get in Touch</h2>
+        <h2 className="text-3xl md:text-4xl font-heading font-bold tracking-wide text-text-brown dark:text-text-cream">GET IN TOUCH</h2>
 
         <div className="mt-8 grid md:grid-cols-2 gap-12 items-start">
           {/* Left: Contact Information */}

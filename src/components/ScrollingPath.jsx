@@ -12,6 +12,23 @@ export default function ScrollingPath(){
   const [len, setLen] = React.useState(0)
   const [progress, setProgress] = React.useState(0)
   const [visible, setVisible] = React.useState(false)
+  // Track theme to choose darker colors on light mode
+  const [isDark, setIsDark] = React.useState(() => {
+    if (typeof document !== 'undefined') {
+      return document.documentElement.classList.contains('dark')
+    }
+    return false
+  })
+
+  React.useEffect(() => {
+    if (typeof MutationObserver === 'undefined') return
+    const el = document.documentElement
+    const update = () => setIsDark(el.classList.contains('dark'))
+    update()
+    const obs = new MutationObserver(() => update())
+    obs.observe(el, { attributes: true, attributeFilter: ['class'] })
+    return () => obs.disconnect()
+  }, [])
 
   // Measure anchors and document size
   const measure = React.useCallback(() => {
@@ -33,15 +50,15 @@ export default function ScrollingPath(){
       return { x, y, width: r.width, height: r.height }
     }
 
-  const aboutSection = document.querySelector('#page-1')
+  const aboutSection = document.querySelector('#tools')
   const aboutBox = absRect(aboutSection)
   const expBox = absRect(document.querySelector('#experience'))
   // Top of projects section for the vertical turn, and divider for horizontal X
-  const projSection = document.querySelector('#page-2')
+  const projSection = document.querySelector('#projects')
   const projBox = absRect(projSection)
   const projDivider = document.querySelector('.projects-divider')
   const projDivBox = absRect(projDivider)
-  const contactBox = absRect(document.querySelector('#page-3'))
+  const contactBox = absRect(document.querySelector('#contact'))
 
   if (!aboutBox || !expBox || !projBox || !contactBox) {
       setDims({ width, height: docHeight })
@@ -177,7 +194,7 @@ export default function ScrollingPath(){
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute top-0 left-0 z-30 hidden md:block"
+      className="pointer-events-none absolute top-0 left-0 z-10 hidden md:block"
       style={{ width: '100%', height: dims.height }}
     >
   <svg ref={svgRef} width="100%" height={dims.height} viewBox={`0 0 ${dims.width} ${dims.height}`}>
@@ -190,8 +207,8 @@ export default function ScrollingPath(){
             </feMerge>
           </filter>
           <linearGradient id="pathGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#ba8e64" />
-            <stop offset="100%" stopColor="#e0c3a6" />
+            <stop offset="0%" stopColor={isDark ? '#ba8e64' : '#5d3a1e'} />
+            <stop offset="100%" stopColor={isDark ? '#e0c3a6' : '#342824'} />
           </linearGradient>
         </defs>
 
@@ -216,9 +233,9 @@ export default function ScrollingPath(){
         {/* Glowing orb at the end of progress */}
         {visible && orb && (
           <g filter="url(#glow)">
-            <circle cx={orb.x} cy={orb.y} r="8" fill="#ffe8cc" opacity="0.9" />
-            <circle cx={orb.x} cy={orb.y} r="16" fill="#ba8e64" opacity="0.35" />
-            <circle cx={orb.x} cy={orb.y} r="28" fill="#ba8e64" opacity="0.12" />
+            <circle cx={orb.x} cy={orb.y} r="8" fill={isDark ? '#ffe8cc' : '#5d3a1e'} opacity={0.9} />
+            <circle cx={orb.x} cy={orb.y} r="16" fill={isDark ? '#ba8e64' : '#342824'} opacity={0.35} />
+            <circle cx={orb.x} cy={orb.y} r="28" fill={isDark ? '#ba8e64' : '#342824'} opacity={0.12} />
           </g>
         )}
       </svg>

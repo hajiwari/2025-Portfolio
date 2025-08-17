@@ -21,6 +21,22 @@ export default function Hero(){
   const [revealHajime, setRevealHajime] = useState(false) // finally reveal HAJIME
   const fullText = 'HAJIME'
   const [nameShrink, setNameShrink] = useState(false)
+  
+  // Check if this is a first visit or reload
+  const [isFirstVisit, setIsFirstVisit] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return !sessionStorage.getItem('heroAnimationSeen')
+    }
+    return true
+  })
+  
+  // Track theme to switch HAJIME outline color in light vs dark
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof document !== 'undefined') {
+      return document.documentElement.classList.contains('dark')
+    }
+    return false
+  })
 
   // Build meta for lines that meet at x=0; shape animated per-line (not as a group)
   const abstractLines = useMemo(() => {
@@ -60,6 +76,17 @@ export default function Hero(){
     img.loading = 'eager'
     img.src = '/assets/hero.jpg'
     img.onload = () => { heroImgLoaded.current = true }
+  }, [])
+
+  // Observe <html> class changes to react to theme toggle from Header
+  useEffect(() => {
+    if (typeof MutationObserver === 'undefined') return
+    const el = document.documentElement
+    const update = () => setIsDark(el.classList.contains('dark'))
+    update()
+    const obs = new MutationObserver(() => update())
+    obs.observe(el, { attributes: true, attributeFilter: ['class'] })
+    return () => obs.disconnect()
   }, [])
 
   // Per-line animated path that keeps the start pinned at (0, yAnchor)
@@ -140,6 +167,32 @@ export default function Hero(){
 
   // Stage the sequence inline on mount
   useEffect(() => {
+    if (!isFirstVisit) {
+      // On reload/return visit: Skip animation and show final state immediately
+      setHiText("Hey! I'm")
+      setHiBrick(true)
+      setShowFullName(true)
+      setShowCallMe(false)
+      setRevealHajime(true)
+      setNameShrink(true)
+      
+      // Dispatch hero ready event immediately for return visits
+      try { 
+        window.dispatchEvent(new CustomEvent('hero:ready')) 
+      } catch (e) {}
+      
+      return
+    }
+
+    // First visit: Run full animation sequence
+    // Mark that the animation has been seen
+    sessionStorage.setItem('heroAnimationSeen', 'true')
+    
+    // Prevent scrolling during intro sequence
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+    document.body.style.overflow = 'hidden'
+    document.body.style.paddingRight = `${scrollbarWidth}px`
+    
     const timers = []
     // 2.0s: change text to "I'm" (keep heading font), show full name
     timers.push(setTimeout(() => {
@@ -157,8 +210,19 @@ export default function Hero(){
       setShowCallMe(false)
       setRevealHajime(true)
     }, 7000))
-    return () => timers.forEach(clearTimeout)
-  }, [])
+    // 8.0s: Re-enable scrolling after intro sequence completes
+    timers.push(setTimeout(() => {
+      document.body.style.overflow = ''
+      document.body.style.paddingRight = ''
+    }, 8000))
+    
+    return () => {
+      timers.forEach(clearTimeout)
+      // Clean up scroll prevention if component unmounts
+      document.body.style.overflow = ''
+      document.body.style.paddingRight = ''
+    }
+  }, [isFirstVisit])
 
   // Remove typing animation: set full name once
   useEffect(() => {
@@ -169,19 +233,21 @@ export default function Hero(){
   useEffect(() => {
     if (revealHajime) {
       setNameShrink(false)
-      const t = setTimeout(() => setNameShrink(true), 450)
+      // On first visit: normal delay, on return visit: shorter delay
+      const delay = isFirstVisit ? 450 : 100
+      const t = setTimeout(() => setNameShrink(true), delay)
       return () => clearTimeout(t)
     } else {
       setNameShrink(false)
     }
-  }, [revealHajime])
+  }, [revealHajime, isFirstVisit])
 
   // Reset motion flag if lines are ever hidden again
   useEffect(() => {
     if (!showLines) setLinesAnimating(false)
   }, [showLines])
   return (
-    <section id="page-0" className="min-h-screen flex items-center justify-center relative overflow-hidden bg-white dark:bg-black" style={{ background: undefined }}>
+    <section id="home" className="min-h-screen flex items-center justify-center relative overflow-hidden bg-white dark:bg-black" style={{ background: undefined }}>
   {/* No overlay; inline sequence */}
   {/* Background line removed as requested */}
 
@@ -295,13 +361,18 @@ export default function Hero(){
                   height="1em"
                   xmlns="http://www.w3.org/2000/svg"
                   style={{ overflow: 'visible', display: 'block' }}
+                  shapeRendering="geometricPrecision"
+                  textRendering="geometricPrecision"
                 >
                   <text
                     x="50%"
                     y="0.8em"
                     textAnchor="middle"
                     fill="currentColor"
+                    stroke="currentColor"
+                    strokeWidth="0.35"
                     style={{
+                      paintOrder: 'stroke fill',
                       fontFamily: 'Bebas Neue, Anton, Impact, "Arial Black", sans-serif',
                       fontWeight: 700,
                       letterSpacing: '0.08em'
@@ -329,15 +400,18 @@ export default function Hero(){
                   width="100%"
                   height="1em"
                   xmlns="http://www.w3.org/2000/svg"
-                  style={{ overflow: 'visible', display: 'block' }}
+          style={{ overflow: 'visible', display: 'block' }}
+          shapeRendering="geometricPrecision"
+          textRendering="geometricPrecision"
                 >
                   <defs>
                     {/* Outside-only outline with slight inner overlap to avoid seams */}
                     <filter id="hajime-outline" filterUnits="userSpaceOnUse" x="-150%" y="-150%" width="400%" height="400%" colorInterpolationFilters="sRGB">
-                      <feMorphology in="SourceAlpha" operator="dilate" radius="2.2" result="dilate" />
-                      <feMorphology in="SourceAlpha" operator="erode" radius="0.6" result="eroded" />
+            <feMorphology in="SourceAlpha" operator="dilate" radius="2.2" result="dilate" />
+            {/* Slightly increase inner overlap to cover anti-aliasing fringe */}
+            <feMorphology in="SourceAlpha" operator="erode" radius="0.85" result="eroded" />
                       <feComposite in="dilate" in2="eroded" operator="out" result="ring" />
-                      <feFlood floodColor="#dac8ab" result="color" />
+                      <feFlood floodColor={isDark ? '#dac8ab' : '#342824'} result="color" />
                       <feComposite in="color" in2="ring" operator="in" result="coloredRing" />
                       <feMerge>
                         <feMergeNode in="coloredRing" />
@@ -410,7 +484,7 @@ export default function Hero(){
             <motion.a 
               whileHover={{ scale: 1.05, y: -2 }} 
               whileTap={{ scale: 0.98 }} 
-              href="#page-3" 
+              href="#contact" 
         className="group relative inline-flex items-center justify-center px-5 py-3 md:px-8 md:py-4 bg-accent text-text-cream font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden text-sm md:text-base"
             >
               <span className="relative z-10">GET IN TOUCH</span>
@@ -420,7 +494,7 @@ export default function Hero(){
             <motion.a 
               whileHover={{ scale: 1.05, y: -2 }} 
               whileTap={{ scale: 0.98 }}
-              href="#page-2" 
+              href="#projects" 
         className="group inline-flex items-center justify-center px-5 py-3 md:px-8 md:py-4 border-2 border-text-brown dark:border-text-cream text-text-brown dark:text-text-cream font-semibold rounded-xl hover:bg-text-brown hover:text-text-cream dark:hover:bg-text-cream dark:hover:text-text-brown transition-all duration-300 text-sm md:text-base"
             >
               VIEW PROJECTS

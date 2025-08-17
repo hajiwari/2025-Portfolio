@@ -2,59 +2,111 @@ import React from 'react'
 import Header from './components/Header'
 import Hero from './components/Hero'
 import Footer from './components/Footer'
-import About from './components/About'
+import Tools from './components/Tools'
 import Experience from './components/Experience'
 import Projects from './components/Projects'
 import Contact from './components/Contact'
 import ScrollingPath from './components/ScrollingPath'
 
 export default function App(){
-  // Center-scroll any in-page anchor target (e.g., #page-3) so the section lands in the viewport middle
+  // Enhanced smooth scroll management with proper top positioning
   React.useEffect(() => {
-    const scrollSectionIntoCenter = (el) => {
-      if (!el) return
-      const rect = el.getBoundingClientRect()
-      const doc = document.documentElement
-      const docHeight = Math.max(
-        doc.scrollHeight,
-        doc.offsetHeight,
-        doc.clientHeight
-      )
-      const targetY = window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2
-      const maxY = Math.max(0, docHeight - window.innerHeight)
-      const y = Math.min(Math.max(0, targetY), maxY)
-      window.scrollTo({ top: y, behavior: 'smooth' })
+    // IMMEDIATE scroll to top on any page load - before anything else
+    window.scrollTo(0, 0)
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+    
+    // Scroll to top on initial page load/reload
+    const scrollToTop = () => {
+      window.scrollTo(0, 0)
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
     }
 
+    const scrollToSection = (el, smooth = true) => {
+      if (!el) return
+      const headerHeight = 120 // Account for fixed header
+      const rect = el.getBoundingClientRect()
+      const targetY = window.scrollY + rect.top - headerHeight
+      window.scrollTo({ 
+        top: Math.max(0, targetY), 
+        behavior: smooth ? 'smooth' : 'instant' 
+      })
+    }
+
+    // Handle hash-based navigation for smooth scrolling
     const onDocClick = (e) => {
       const a = e.target.closest && e.target.closest('a[href^="#"]')
       if (!a) return
+      
       const href = a.getAttribute('href') || ''
       if (href === '#' || href.length < 2) return
-      const id = href.slice(1)
-      if (id !== 'page-3') return // only handle Contact
-      const el = document.getElementById(id)
+      
+      const sectionId = href.slice(1)
+      if (!['home', 'tools', 'experience', 'projects', 'contact'].includes(sectionId)) return
+      
+      const el = document.getElementById(sectionId)
       if (!el) return
+      
       e.preventDefault()
-      // Update hash without native jump, then center-scroll
-      try { history.replaceState(null, '', href) } catch {}
-      scrollSectionIntoCenter(el)
+      
+      // Update URL without page reload for better UX and SEO
+      try { 
+        history.replaceState(null, '', href) 
+      } catch {}
+      
+      if (sectionId === 'home') {
+        scrollToTop()
+      } else {
+        scrollToSection(el, true) // Always smooth for clicks
+      }
     }
 
+    // Handle hash changes (browser back/forward, direct URL access)
     const onHashChange = () => {
       const hash = (window.location.hash || '').replace('#', '')
-      if (!hash || hash !== 'page-3') return
+      if (!hash) {
+        scrollToTop()
+        return
+      }
+      
+      if (!['home', 'tools', 'experience', 'projects', 'contact'].includes(hash)) return
+      
       const el = document.getElementById(hash)
-      if (el) scrollSectionIntoCenter(el)
+      if (el) {
+        if (hash === 'home') {
+          scrollToTop()
+        } else {
+          scrollToSection(el, false) // No smooth for initial load
+        }
+      }
+    }
+
+    // Handle initial page load
+    const handleInitialLoad = () => {
+      // Force scroll to absolute top immediately and aggressively
+      window.scrollTo(0, 0)
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+      
+      // Clear any hash from URL on page load/reload
+      if (window.location.hash) {
+        history.replaceState(null, '', window.location.pathname + window.location.search)
+      }
+      
+      // Force another scroll after a tiny delay to ensure it sticks
+      setTimeout(() => {
+        window.scrollTo(0, 0)
+        document.documentElement.scrollTop = 0
+        document.body.scrollTop = 0
+      }, 10)
     }
 
     document.addEventListener('click', onDocClick)
     window.addEventListener('hashchange', onHashChange)
-
-    // If landing on a hash, center it after initial paint
-  if (window.location.hash === '#page-3') {
-      requestAnimationFrame(() => onHashChange())
-    }
+    
+    // Handle initial load
+    handleInitialLoad()
 
     return () => {
       document.removeEventListener('click', onDocClick)
@@ -63,13 +115,13 @@ export default function App(){
   }, [])
 
   return (
-    <div className="relative min-h-screen bg-text-cream text-text-brown dark:bg-darker-bg dark:text-text-cream font-body">
+    <div className="relative min-h-screen flex flex-col bg-text-cream text-text-brown dark:bg-darker-bg dark:text-text-cream font-body">
   {/* Global scrolling path overlay */}
   <ScrollingPath />
       <Header />
-      <main>
+  <main className="flex-1">
   <Hero />
-  <About />
+  <Tools />
   <Experience />
   <Projects />
   <Contact />

@@ -1,5 +1,6 @@
 import React from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
+import { createPortal } from 'react-dom'
 import Glide from '@glidejs/glide'
 import '@glidejs/glide/dist/css/glide.core.min.css'
 import '@glidejs/glide/dist/css/glide.theme.min.css'
@@ -49,6 +50,91 @@ export default function Projects(){
   const ref = React.useRef(null)
   const glideRefs = React.useRef({})
   const [adPosterWidths, setAdPosterWidths] = React.useState({})
+  const [previewModal, setPreviewModal] = React.useState(null) // { projectTitle, images, currentIndex }
+
+  const openPreview = (projectTitle, images, currentIndex) => {
+    console.log('Opening preview:', projectTitle, currentIndex) // Debug log
+    // Only open preview for non-web development projects
+    if (projectTitle === 'Web developments') return
+    
+    // Calculate scrollbar width to prevent layout shift
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+    
+    // Just prevent scrolling without changing position
+    document.body.style.overflow = 'hidden'
+    document.body.style.paddingRight = `${scrollbarWidth}px`
+    
+    // Disable all Glide instances
+    Object.keys(glideRefs.current).forEach(key => {
+      if (key.endsWith('_instance')) {
+        const glide = glideRefs.current[key]
+        if (glide && glide.disable) {
+          glide.disable()
+        }
+      }
+    })
+    
+    setPreviewModal({ projectTitle, images, currentIndex })
+  }
+
+  const closePreview = () => {
+    // Simply restore body styles
+    document.body.style.overflow = ''
+    document.body.style.paddingRight = ''
+    
+    // Re-enable all Glide instances
+    Object.keys(glideRefs.current).forEach(key => {
+      if (key.endsWith('_instance')) {
+        const glide = glideRefs.current[key]
+        if (glide && glide.enable) {
+          glide.enable()
+        }
+      }
+    })
+    
+    setPreviewModal(null)
+  }
+
+  const goToNext = () => {
+    if (!previewModal) return
+    const nextIndex = (previewModal.currentIndex + 1) % previewModal.images.length
+    setPreviewModal(prev => ({ ...prev, currentIndex: nextIndex }))
+  }
+
+  const goToPrevious = () => {
+    if (!previewModal) return
+    const prevIndex = previewModal.currentIndex === 0 
+      ? previewModal.images.length - 1 
+      : previewModal.currentIndex - 1
+    setPreviewModal(prev => ({ ...prev, currentIndex: prevIndex }))
+  }
+
+  // Handle keyboard navigation
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!previewModal) return
+      
+      switch (e.key) {
+        case 'Escape':
+          closePreview()
+          break
+        case 'ArrowRight':
+          goToNext()
+          break
+        case 'ArrowLeft':
+          goToPrevious()
+          break
+      }
+    }
+
+    if (previewModal) {
+      document.addEventListener('keydown', handleKeyDown)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [previewModal])
 
   React.useEffect(() => {
     const observers = []
@@ -75,16 +161,16 @@ export default function Projects(){
           const isWebDev = project.title === 'Web developments'
           const isIllustrations = project.title === 'Illustrations'
           const adjustedGap = isWebDev ? 16 : (isIllustrations ? 0 : baseGap)
-          // Stronger left cut for Illustrations, larger peek overall for Web Dev
-          const adjustedPeekBefore = isWebDev ? 64 : (isIllustrations ? 48 : basePeek)
-          const adjustedPeekAfter  = isWebDev ? 64 : (isIllustrations ? 24 : basePeek)
+          // Always start from left, cut on right by setting peek values
+          const adjustedPeekBefore = 0  // No peek before (start from left)
+          const adjustedPeekAfter = isWebDev ? 64 : (isIllustrations ? 24 : basePeek)  // Peek after (cut on right)
           const animDuration = isIllustrations ? 700 : 700
           const animEase = 'cubic-bezier(0.22, 1, 0.36, 1)'
 
           const effectiveCount = (project.images && project.images.length > 0) ? project.images.length : 1
           const glide = new Glide(glideElement, {
             type: 'carousel',
-            startAt: isLeftToRight ? 0 : Math.max(0, (effectiveCount || 1) - 1),
+            startAt: 0,  // Always start at the first item (leftmost)
             perView:
               (project.title === 'Ad posters')
                 ? 4
@@ -99,7 +185,9 @@ export default function Projects(){
             keyboard: true,
             animationDuration: animDuration,
             animationTimingFunc: animEase,
-            direction: isLeftToRight ? 'ltr' : 'rtl',
+            direction: 'ltr', // Force left-to-right for consistent behavior
+            rewind: false, // Prevent rewind jumps
+            bound: true, // Prevent overscroll
             breakpoints: {
               1024: {
                 perView:
@@ -126,7 +214,38 @@ export default function Projects(){
             }
           })
 
+          // Hide initially to prevent jump, then mount
+          glideElement.style.opacity = '0'
           glide.mount()
+          
+          // Show after mount with smooth transition
+          requestAnimationFrame(() => {
+            glideElement.style.transition = 'opacity 0.3s ease'
+            glideElement.style.opacity = '1'
+          })
+          
+          // Add event delegation to handle clicks on all slides including clones
+          const handleSlideClick = (e) => {
+            const projectCard = e.target.closest('.project-card')
+            if (!projectCard) return
+            
+            const projectTitle = projectCard.getAttribute('data-project')
+            const imageIndex = parseInt(projectCard.getAttribute('data-index'), 10)
+            
+            // Only handle non-web development projects
+            if (projectTitle && projectTitle !== 'Web developments' && !isNaN(imageIndex)) {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('Slide clicked via delegation:', projectTitle, imageIndex)
+              openPreview(projectTitle, project.images, imageIndex)
+            }
+          }
+          
+          glideElement.addEventListener('click', handleSlideClick)
+          glideRefs.current[`${project.title}_clickHandler`] = () => {
+            glideElement.removeEventListener('click', handleSlideClick)
+          }
+          
           // Pause autoplay when hovering arrow buttons
           const arrows = glideElement.querySelectorAll('.glide__arrow')
           const removeArrowListeners = []
@@ -145,6 +264,7 @@ export default function Projects(){
             })
           })
           glideRefs.current[`${project.title}_arrowsCleanup`] = removeArrowListeners
+          
           setTimeout(() => {
             glide.update({ autoplay: 4000 })
             glide.play()
@@ -172,6 +292,14 @@ export default function Projects(){
           const cleaners = glideRefs.current[key]
           if (Array.isArray(cleaners)) {
             cleaners.forEach(fn => { try { fn() } catch {} })
+          }
+        }
+      })
+      Object.keys(glideRefs.current).forEach(key => {
+        if (key.endsWith('_clickHandler')) {
+          const cleanup = glideRefs.current[key]
+          if (typeof cleanup === 'function') {
+            try { cleanup() } catch {}
           }
         }
       })
@@ -206,7 +334,7 @@ export default function Projects(){
   }, [])
 
   return (
-    <section id="page-2" className="py-16 bg-text-cream dark:bg-darker-bg projects-criss-cross overflow-hidden">
+    <section id="projects" className="py-16 bg-text-cream dark:bg-darker-bg projects-criss-cross overflow-hidden">
     <style>{`
         [data-project="Ad posters"] .glide__slides { display: flex; }
         [data-project="Ad posters"] .glide__slide { width: auto !important; }
@@ -230,8 +358,8 @@ export default function Projects(){
         transition={{ duration: 0.4, ease: 'easeOut' }}
         className="max-w-6xl mx-auto px-6 relative z-[1]"
       >
-        <div className="flex items-end justify-between">
-          <h2 className="text-2xl font-heading font-bold tracking-wider text-text-brown dark:text-text-cream">PROJECTS</h2>
+        <div className="flex items-end justify-center">
+          <h2 className="text-3xl md:text-4xl font-heading font-bold tracking-wide text-text-brown dark:text-text-cream">PROJECTS</h2>
         </div>
         <div ref={ref} className="relative mt-8 projects-root">
           <div className="space-y-10">
@@ -275,9 +403,14 @@ export default function Projects(){
                               const isIllustrations = p.title === 'Illustrations'
                               const key = `${p.title}-${idx}`
                               const computedWidthRem = isAdPosters && adPosterWidths[key] ? adPosterWidths[key] : derivedWidthRem
+                              
+                              // Create unique ID for each image including source hash
+                              const srcHash = src ? src.split('').reduce((a,b) => {a=((a<<5)-a)+b.charCodeAt(0);return a&a},0) : idx
+                              const uniqueId = `${p.title.replace(/\s+/g, '')}-${projectIndex}-${idx}-${Math.abs(srcHash)}`
+                              
                               return (
                                 <li
-                                  key={`${p.title}-img-${idx}`}
+                                  key={uniqueId}
                                   className="glide__slide"
                                   style={isAdPosters ? { width: `${computedWidthRem}rem` } : undefined}
                                 >
@@ -320,6 +453,9 @@ export default function Projects(){
                                         height: `${baseHRem}rem`,
                                         margin: isWebDevCard ? '0rem' : '0.25rem',
                                       }}
+                                      data-project={p.title}
+                                      data-index={idx}
+                                      data-unique-id={uniqueId}
                                     >
                                       <img
                                         src={src}
@@ -339,6 +475,7 @@ export default function Projects(){
                                         decoding="async"
                                         fetchpriority={(isHighPriority || isWebDevCard || isIllustrations) ? 'high' : 'auto'}
                                         draggable={false}
+                                        style={{ pointerEvents: 'none' }}
                                       />
                                     </div>
                                   )}
@@ -374,6 +511,96 @@ export default function Projects(){
           </div>
         </div>
       </motion.div>
+
+      {/* Image Preview Modal - Portal to body */}
+      {previewModal && createPortal(
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-90"
+          style={{ zIndex: 999999 }}
+        >
+          {/* Backdrop - clicking closes modal */}
+          <div 
+            className="absolute inset-0 cursor-pointer"
+            onClick={closePreview}
+          />
+          
+          {/* Modal Content */}
+          <div className="relative max-w-4xl max-h-[90vh] mx-4" onClick={(e) => e.stopPropagation()}>
+            {/* Image */}
+            <div className="relative">
+              <img
+                src={typeof previewModal.images[previewModal.currentIndex] === 'string' 
+                  ? previewModal.images[previewModal.currentIndex] 
+                  : previewModal.images[previewModal.currentIndex]?.src
+                }
+                alt={`${previewModal.projectTitle} ${previewModal.currentIndex + 1}`}
+                className="block object-contain rounded-lg shadow-2xl"
+                style={{ 
+                  width: '80vw', 
+                  height: '80vh', 
+                  maxWidth: '800px', 
+                  maxHeight: '600px' 
+                }}
+                draggable={false}
+              />
+              
+              {/* Close Button - positioned beside the image on right */}
+              <button
+                onClick={closePreview}
+                className="absolute top-0 -right-12 z-[10000] w-10 h-10 flex items-center justify-center transition-all duration-200"
+                aria-label="Close preview"
+              >
+                <svg className="w-8 h-8 text-white hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              
+              {/* Image Counter */}
+              {previewModal.images.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+                  {previewModal.currentIndex + 1} / {previewModal.images.length}
+                </div>
+              )}
+            </div>
+
+            {/* Previous Button */}
+            {previewModal.images.length > 1 && (
+              <button
+                onClick={goToPrevious}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-[10000] w-14 h-14 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full flex items-center justify-center transition-all duration-200 backdrop-blur-sm border border-white border-opacity-20"
+                aria-label="Previous image"
+              >
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+
+            {/* Next Button */}
+            {previewModal.images.length > 1 && (
+              <button
+                onClick={goToNext}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-[10000] w-14 h-14 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full flex items-center justify-center transition-all duration-200 backdrop-blur-sm border border-white border-opacity-20"
+                aria-label="Next image"
+              >
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
+
+            {/* Project Title */}
+            <div className="absolute -bottom-12 left-0 text-white text-lg font-semibold">
+              {previewModal.projectTitle}
+            </div>
+          </div>
+        </motion.div>,
+        document.body
+      )}
     </section>
   )
 }

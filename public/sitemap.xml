@@ -5,18 +5,18 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>/#page-0</loc>
+    <loc>/#home</loc>
   </url>
   <url>
-    <loc>/#page-1</loc>
+    <loc>/#tools</loc>
   </url>
   <url>
     <loc>/#experience</loc>
   </url>
   <url>
-    <loc>/#page-2</loc>
+    <loc>/#projects</loc>
   </url>
   <url>
-    <loc>/#page-3</loc>
+    <loc>/#contact</loc>
   </url>
 </urlset>

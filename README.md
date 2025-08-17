@@ -1,29 +1,36 @@
 # Hajime Portfolio
 
-React + Vite + Tailwind portfolio with dark mode, EmailJS contact form, and Vercel deploy config.
+Modern portfolio built with React, Vite, and Tailwind CSS. Includes dark mode, an EmailJS-powered contact form, and Vercel deployment.
 
-## Run locally
+## Features
+
+- React 18 + Vite 5 + Tailwind CSS
+- Dark mode toggle (persisted in localStorage)
+- Contact form via EmailJS
+- Ready for Vercel deploy (with `vercel.json`)
+- SEO assets: robots.txt, sitemap.xml, web manifest
+
+## Requirements
+
+- Node.js 18+ and npm
+
+## Local development
 
 ```cmd
 npm install
 npm run dev
 ```
 
-## Production build
+## Build and preview
 
 ```cmd
 npm run build
 npm run preview
 ```
 
-## Dark mode
+## Environment variables (EmailJS)
 
-- Toggle via the header button; preference is saved in localStorage.
-
-## EmailJS (contact form)
-
-1. Create an EmailJS account and a service + template.
-2. Add a .env file in the project root with:
+Create a `.env.local` (or `.env`) in the project root:
 
 ```ini
 VITE_EMAILJS_SERVICE_ID=your_service_id
@@ -31,14 +38,17 @@ VITE_EMAILJS_TEMPLATE_ID=your_template_id
 VITE_EMAILJS_PUBLIC_KEY=your_public_key
 ```
 
-## Deploy to Vercel
+These are required for the contact form in `src/components/Contact.jsx`.
 
-1. Push to a Git repo (GitHub).
-2. Import in Vercel, set Build Command: `npm run build`, Output Directory: `dist`.
-3. Add the three VITE_EMAILJS_* env vars in Project Settings.
+## Deploying to Vercel
+
+1. Connect the repository in Vercel.
+2. Build Command: `npm run build`  •  Output Directory: `dist`.
+3. Add the three `VITE_EMAILJS_*` env vars in Project Settings.
 4. Deploy.
 
-## SEO
+## Notes
 
-- index.html includes meta title/description and social preview tags.
-- robots.txt, sitemap.xml, and site.webmanifest are in /public.
+- SEO/meta tags are defined in `index.html`.
+- `public/` contains `robots.txt`, `sitemap.xml`, and `site.webmanifest`.
+- Available scripts: `dev`, `build`, `preview`, `lint`.
