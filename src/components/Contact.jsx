@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 import { SiGithub, SiLinkedin, SiUpwork } from 'react-icons/si'
 
 export default function Contact(){
@@ -26,8 +27,14 @@ export default function Contact(){
   }
 
   return (
-  <section id="page-3" className="py-16 bg-text-cream dark:bg-darker-bg">
-      <div className="max-w-5xl mx-auto px-6">
+    <section id="page-3" className="py-16 bg-text-cream dark:bg-darker-bg">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-50px' }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+        className="max-w-5xl mx-auto px-6"
+      >
         <h2 className="text-2xl font-heading font-bold tracking-wider text-text-brown dark:text-text-cream">Get in Touch</h2>
 
         <div className="mt-8 grid md:grid-cols-2 gap-12 items-start">
@@ -116,7 +123,7 @@ export default function Contact(){
             </form>
           </div>
         </div>
-      </div>
+      </motion.div>
     </section>
   )
 }

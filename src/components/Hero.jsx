@@ -533,7 +533,8 @@ export default function Hero(){
                 }
               }}
               onAnimationComplete={() => {
-                if (i === 7 && !heroReadySent.current) {
+                // Only announce readiness after the image is confirmed loaded
+                if (i === 7 && !heroReadySent.current && heroImgLoaded.current) {
                   heroReadySent.current = true
                   try { window.dispatchEvent(new CustomEvent('hero:ready')) } catch (e) {}
                 }
