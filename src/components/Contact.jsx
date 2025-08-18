@@ -9,20 +9,36 @@ export default function Contact(){
   const onSubmit = async (e) => {
     e.preventDefault()
     setStatus('sending')
+    
     try {
       const service = import.meta.env.VITE_EMAILJS_SERVICE_ID
       const template = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
       const user = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      
       if (!service || !template || !user) {
-        throw new Error('EmailJS env vars missing')
+        throw new Error('EmailJS configuration missing')
       }
+      
       const { default: emailjs } = await import('@emailjs/browser')
-      await emailjs.sendForm(service, template, formRef.current, user)
+      const formData = new FormData(formRef.current)
+      
+      const templateParams = {
+        to_email: 'projects.jaimedelacruziii@gmail.com',
+        from_name: formData.get('name'),
+        from_email: formData.get('email'),
+        subject: formData.get('subject'),
+        message: formData.get('message'),
+        reply_to: formData.get('email')
+      }
+      
+      await emailjs.send(service, template, templateParams, user)
       setStatus('sent')
       formRef.current.reset()
+      setTimeout(() => setStatus(null), 5000)
     } catch (err) {
-      console.error(err)
+      console.error('Email error:', err)
       setStatus('error')
+      setTimeout(() => setStatus(null), 5000)
     }
   }
 
@@ -115,11 +131,19 @@ export default function Contact(){
                 <label htmlFor="message" className="block text-sm font-medium text-text-brown dark:text-text-cream">Message</label>
                 <textarea id="message" name="message" rows={4} required className="w-full p-3 rounded-lg border border-text-gray dark:border-text-brown bg-text-cream dark:bg-text-brown text-text-brown dark:text-text-cream focus:outline-none focus:border-brown-600 focus:ring-1 focus:ring-brown-600 dark:focus:border-brown-400 dark:focus:ring-brown-400 resize-none"></textarea>
               </div>
-              <button type="submit" disabled={status === 'sending'} className="w-full bg-accent hover:bg-brown-600 text-text-cream px-6 py-3 rounded-lg shadow-lg transition-colors disabled:opacity-50">
+              <button type="submit" disabled={status === 'sending'} className="w-full bg-accent hover:bg-brown-600 text-text-cream px-6 py-3 rounded-lg shadow-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 {status === 'sending' ? 'Sending...' : 'Send Message'}
               </button>
-              {status === 'sent' && <p className="text-green-600 dark:text-green-400">Message sent successfully!</p>}
-              {status === 'error' && <p className="text-red-600 dark:text-red-400">Failed to send. Check your EmailJS setup.</p>}
+              {status === 'sent' && (
+                <div className="p-3 bg-green-100 dark:bg-green-900 border border-green-300 dark:border-green-700 rounded-lg">
+                  <p className="text-green-700 dark:text-green-300 text-sm">✅ Message sent successfully! I'll get back to you soon.</p>
+                </div>
+              )}
+              {status === 'error' && (
+                <div className="p-3 bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-700 rounded-lg">
+                  <p className="text-red-700 dark:text-red-300 text-sm">❌ Failed to send message. Please try again or contact me directly at projects.jaimedelacruziii@gmail.com</p>
+                </div>
+              )}
             </form>
           </div>
         </div>

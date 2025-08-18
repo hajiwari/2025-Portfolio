@@ -29,6 +29,18 @@
   <!-- External image host performance hints -->
   <link rel="dns-prefetch" href="//i.ibb.co" />
   <link rel="preconnect" href="https://i.ibb.co" crossorigin />
+  
+  <!-- Prevent theme flash by setting theme immediately -->
+  <script>
+    (function() {
+      const saved = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const enabled = saved ? saved === 'dark' : prefersDark;
+      if (enabled) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
   </head>
   <body>
     <div id="root"></div>

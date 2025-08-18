@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { HiSun, HiMoon } from 'react-icons/hi'
 
 export default function Header(){
-  const [dark, setDark] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   
@@ -19,13 +18,19 @@ export default function Header(){
     return !isFirstVisit // Only show immediately if NOT first visit
   })
 
-  useEffect(() => {
+  // Initialize dark mode state synchronously to prevent flash
+  const [dark, setDark] = useState(() => {
+    if (typeof window === 'undefined') return false
     const saved = localStorage.getItem('theme')
     const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
     const enabled = saved ? saved === 'dark' : prefersDark
-    setDark(enabled)
+    // Apply theme immediately during initialization
     document.documentElement.classList.toggle('dark', enabled)
-  }, [])
+    return enabled
+  })
+
+  // Remove the useEffect that was causing the flash
+  // Theme is now set synchronously in useState initializer
 
   useEffect(() => {
     const handleScroll = () => {
