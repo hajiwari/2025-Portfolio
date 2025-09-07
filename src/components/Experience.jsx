@@ -4,16 +4,16 @@ import { motion } from 'framer-motion'
 const experiences = [
   {
     title: 'Technical Marketing Assistant',
-    company: 'VSL - Social Media Agency (Remote, US)',
+    company: 'Social Media Agency (Remote, US)',
     year: 'Apr 2025 — Present',
-  icon: 'https://assets.cdn.filesafe.space/54PiEFlRWZcrTNV8UnPz/media/67816fccd1dc9840d201b3c1.png',
+  icon: null,
     description:
       'Managed full-funnel ops for 50+ accounts (Meta buying, funnels, CRM) and built GHL automations, tracking, and revenue dashboards to speed sales decisions.'
   },
   {
     title: 'Technical Associate',
     company: 'Reed Elsevier Philippines, Quezon City, PH',
-    year: 'Jul 2024',
+    year: 'Jul 2024  —  September 2025',
   icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRAF2Zflk8QSG1GXcNI1hMhXOfkdyfdI2O81Q&s',
     description:
       'Primary comms POC with timely, accurate responses; partnered on process improvements to streamline workflows.'
